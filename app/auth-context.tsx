@@ -18,7 +18,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [userId, setUserId] = useState<number | null>(null);
 
   useEffect(() => {
-    fetch("http://localhost:5000/session", { credentials: "include" })
+    fetch("http://schirmer-s-notary-backend.onrender.com/session", { credentials: "include" })
       .then(res => res.ok ? res.json() : null)
       .then(data => {
         if (data && data.user_id) {
@@ -30,7 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    const res = await fetch("http://localhost:5000/login", {
+    const res = await fetch("http://schirmer-s-notary-backend.onrender.com/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
@@ -44,7 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
-    fetch("http://localhost:5000/logout", { method: "POST", credentials: "include" });
+    fetch("http://schirmer-s-notary-backend.onrender.com/logout", { method: "POST", credentials: "include" });
     setIsLoggedIn(false);
     setIsPremium(false);
     setUserId(null);

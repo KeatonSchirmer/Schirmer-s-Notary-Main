@@ -15,7 +15,7 @@ export default function LoginPage() {
         setError("");
         setSuccess("");
         try {
-            const res = await fetch("http://localhost:5000/login", {
+            const res = await fetch("http://schirmer-s-notary-backend.onrender.com/login", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",

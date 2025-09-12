@@ -68,7 +68,7 @@ const RequestPage: React.FC = () => {
     setHistoryLoading(true);
     setHistoryError("");
     try {
-      const res = await fetch("http://localhost:5000/client/requests", { credentials: "include" });
+      const res = await fetch("http://schirmer-s-notary-backend.onrender.com/client/requests", { credentials: "include" });
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
       setHistory(data.requests || []);
