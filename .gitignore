@@ -23,6 +23,7 @@
 # misc
 .DS_Store
 *.pem
+public/busy.gif
 
 # debug
 npm-debug.log*
