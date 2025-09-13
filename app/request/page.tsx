@@ -1,4 +1,4 @@
-
+type Value = Date | [Date | null, Date | null] | null;
 "use client";
 
 import { submitRequest } from "./utils";
@@ -8,7 +8,17 @@ import 'react-calendar/dist/Calendar.css';
 import { useAuth } from "../auth-context";
 
 const RequestPage: React.FC = () => {
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Value>(null);
+
+  // Helper to display selected date
+  const getSelectedDateString = () => {
+    if (!selectedDate) return "";
+    if (Array.isArray(selectedDate)) {
+      // If range, show start date
+      return selectedDate[0] ? selectedDate[0].toLocaleDateString() : "";
+    }
+    return selectedDate.toLocaleDateString();
+  };
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -93,13 +103,14 @@ const RequestPage: React.FC = () => {
       <div>
         <h3 className="text-lg md:text-xl font-bold mb-4">Select Appointment Date</h3>
         <Calendar
-          onChange={setSelectedDate}
+          onChange={(value) => setSelectedDate(value)}
           value={selectedDate}
           minDate={new Date()}
+          selectRange={false}
           className="mb-6 rounded-xl shadow"
         />
         {selectedDate && (
-          <div className="mb-4 text-green-700 font-semibold">Selected: {selectedDate.toLocaleDateString()}</div>
+          <div className="mb-4 text-green-700 font-semibold">Selected: {getSelectedDateString()}</div>
         )}
         <h2 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Request a Service</h2>
         <form className="bg-white p-4 md:p-8 rounded-xl shadow-md space-y-4 md:space-y-6" onSubmit={handleSubmit}>
