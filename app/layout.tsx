@@ -37,7 +37,7 @@ export default function RootLayout({
                 <Link href="/" className="hover:text-green-700">Home</Link>
                 <Link href="/services" className="hover:text-green-700">Services</Link>
                 <Link href="/about" className="hover:text-green-700">About</Link>
-                <Link href="/request" className="hover:text-green-700">Request</Link>
+                <Link href="/request" className="hover:text-green-700">Jobs</Link>
                 <Link href="/contact" className="hover:text-green-700">Contact</Link>
                 <Link href="/login" className="px-3 py-1 rounded-lg bg-green-700 text-white hover:bg-green-800">Login</Link>
               </nav>

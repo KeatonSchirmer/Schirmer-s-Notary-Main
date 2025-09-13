@@ -30,19 +30,19 @@ export default function Services() {
     const onlineRushP = (onlineRush * (1 - discount)).toFixed(2);
 
     return (
-        <div className="min-h-screen bg-gray-50 text-gray-800">
-            <h2 className="text-3xl font-bold mt-5 mb-8 text-center text-green-700">Our Services & Pricing</h2>
+        <div className="min-h-screen bg-gray-50 text-gray-800 px-4 md:px-0">
+            <h2 className="text-2xl md:text-3xl font-bold mt-4 md:mt-5 mb-6 md:mb-8 text-center text-green-700">Our Services & Pricing</h2>
 
             {isPremium && (
-                <div className="bg-green-100 p-4 rounded-xl shadow mb-8 max-w-4xl mx-auto text-center">
-                    <h3 className="text-xl font-semibold text-green-700 mb-2">Premium Pricing Applied</h3>
-                    <p className="text-green-700">You save 40% on all notary service fees!</p>
+                <div className="bg-green-100 p-3 md:p-4 rounded-xl shadow mb-6 md:mb-8 max-w-4xl mx-auto text-center">
+                    <h3 className="text-lg md:text-xl font-semibold text-green-700 mb-1 md:mb-2">Premium Pricing Applied</h3>
+                    <p className="text-green-700 text-sm md:text-base">You save 40% on all notary service fees!</p>
                 </div>
             )}
 
-            <div className="bg-white p-8 rounded-xl shadow-md mb-12 max-w-4xl mx-auto text-center">
-                <h3 className="text-2xl font-semibold mb-4 text-green-700">Schirmer&apos;s Notary Pricing Policy</h3>
-                <p className="mb-4">
+            <div className="bg-white p-4 md:p-8 rounded-xl shadow-md mb-8 md:mb-12 max-w-4xl mx-auto text-center">
+                <h3 className="text-lg md:text-2xl font-semibold mb-2 md:mb-4 text-green-700">Schirmer&apos;s Notary Pricing Policy</h3>
+                <p className="mb-2 md:mb-4 text-sm md:text-base">
                 At Schirmer&apos;s Notary, we provide flexible service options to meet the needs of individuals and businesses.
                 Our mission is to make notarization fast, reliable, and convenient — whether in person, online, or in-office.
                 Our pricing reflects the time, travel, and preparation required for each service. All rates are transparent
@@ -51,27 +51,27 @@ export default function Services() {
                 </p>
             </div>
 
-            <div className="bg-gray-50 p-6 rounded-xl shadow mb-8 max-w-4xl mx-auto">
-                <h4 className="text-xl font-semibold text-green-700 mb-3">General Mobile Notarizations</h4>
-                <ul className="list-disc list-inside space-y-2">
+            <div className="bg-gray-50 p-3 md:p-6 rounded-xl shadow mb-6 md:mb-8 max-w-4xl mx-auto">
+                <h4 className="text-lg md:text-xl font-semibold text-green-700 mb-2 md:mb-3">General Mobile Notarizations</h4>
+                <ul className="list-disc list-inside space-y-1 md:space-y-2 text-sm md:text-base">
                 <li>${mobileBaseP} per document + ${mobileTravelP} travel fee within 15 miles</li>
                 <li>$0.75-$1.00 per mile after 15 miles</li>
                 <li>Add-ons: ${mobileAddonP} per extra signer, seal, or document</li>
                 </ul>
             </div>
 
-            <div className="bg-gray-50 p-6 rounded-xl shadow mb-8 max-w-4xl mx-auto">
-                <h4 className="text-xl font-semibold text-green-700 mb-3">Loan Signings / Real Estate Closings</h4>
-                <ul className="list-disc list-inside space-y-2">
+            <div className="bg-gray-50 p-3 md:p-6 rounded-xl shadow mb-6 md:mb-8 max-w-4xl mx-auto">
+                <h4 className="text-lg md:text-xl font-semibold text-green-700 mb-2 md:mb-3">Loan Signings / Real Estate Closings</h4>
+                <ul className="list-disc list-inside space-y-1 md:space-y-2 text-sm md:text-base">
                 <li>Flat rate: ${loanBaseP} per signing within 25 miles</li>
                 <li>+${loanTravelP} travel surcharge beyond 25 miles</li>
                 <li>Add-ons: ${loanRushP} for same-day rush jobs</li>
                 </ul>
             </div>
 
-            <div className="bg-gray-50 p-6 rounded-xl shadow mb-8 max-w-4xl mx-auto">
-                <h4 className="text-xl font-semibold text-green-700 mb-3">Remote Online Notarization</h4>
-                <ul className="list-disc list-inside space-y-2">
+            <div className="bg-gray-50 p-3 md:p-6 rounded-xl shadow mb-6 md:mb-8 max-w-4xl mx-auto">
+                <h4 className="text-lg md:text-xl font-semibold text-green-700 mb-2 md:mb-3">Remote Online Notarization</h4>
+                <ul className="list-disc list-inside space-y-1 md:space-y-2 text-sm md:text-base">
                 <li>${onlineBaseP} per document</li>
                 <li>${onlineAddonP} per extra signer or seal</li>
                 <li>Urgent/after-hours fee: +${onlineUrgentP}</li>
@@ -79,19 +79,19 @@ export default function Services() {
                 </ul>
             </div>
 
-            <div className="bg-gray-50 p-6 rounded-xl shadow mb-8 max-w-4xl mx-auto">
-                <h4 className="text-xl font-semibold text-green-700 mb-3">Business Subscriptions</h4>
-                <ul className="list-disc list-inside space-y-2">
+            <div className="bg-gray-50 p-3 md:p-6 rounded-xl shadow mb-6 md:mb-8 max-w-4xl mx-auto">
+                <h4 className="text-lg md:text-xl font-semibold text-green-700 mb-2 md:mb-3">Business Subscriptions</h4>
+                <ul className="list-disc list-inside space-y-1 md:space-y-2 text-sm md:text-base">
                 <li><strong>Business Plan:</strong> $30/month - Save 20% on all notary service fees</li>
                 <li><strong>Premium Plan:</strong> $75/month - Save 40% on all notary service fees & Priority Booking</li>
                 <li><strong>Corporate Retainer:</strong> $750/month - Ask for more information</li>
                 </ul>
-                <p className="mt-3 text-sm italic">*Minimum subscription commitment: 6 months</p>
+                <p className="mt-2 md:mt-3 text-xs md:text-sm italic">*Minimum subscription commitment: 6 months</p>
             </div>
 
-            <div className="bg-gray-50 p-6 rounded-xl shadow max-w-4xl mx-auto mb-16">
-                <h4 className="text-xl font-semibold text-green-700 mb-3">Contract Pricing</h4>
-                <p>
+            <div className="bg-gray-50 p-3 md:p-6 rounded-xl shadow max-w-4xl mx-auto mb-10 md:mb-16">
+                <h4 className="text-lg md:text-xl font-semibold text-green-700 mb-2 md:mb-3">Contract Pricing</h4>
+                <p className="text-sm md:text-base">
                 We also provide custom contract pricing for larger companies and organizations that require long-term or
                 high-volume notary services. Please <a href="/contact" className="text-green-700 hover:underline">contact us</a> directly 
                 to discuss a tailored plan.

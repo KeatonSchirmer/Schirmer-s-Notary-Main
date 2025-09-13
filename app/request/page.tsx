@@ -63,7 +63,6 @@ const RequestPage: React.FC = () => {
     }
   };
 
-  // Fetch request history for logged-in users
   const fetchHistory = async () => {
     setHistoryLoading(true);
     setHistoryError("");
@@ -88,26 +87,26 @@ const RequestPage: React.FC = () => {
   }, [isLoggedIn]);
 
   return (
-    <div className="max-w-6xl mx-auto py-16 px-6 grid md:grid-cols-2 gap-10">
+    <div className="max-w-6xl mx-auto py-10 md:py-16 px-4 md:px-6 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
       <div>
-        <h2 className="text-3xl font-bold mb-6">Request a Service</h2>
-        <form className="bg-white p-8 rounded-xl shadow-md space-y-6" onSubmit={handleSubmit}>
-          <input type="text" placeholder="Full Name" className="w-full p-3 border rounded-lg" required value={name} onChange={e => setName(e.target.value)} />
-          <input type="email" placeholder="Email Address" className="w-full p-3 border rounded-lg" required value={email} onChange={e => setEmail(e.target.value)} />
-          <input type="tel" placeholder="Phone Number (optional)" className="w-full p-3 border rounded-lg" value={phone} onChange={e => setPhone(e.target.value)} />
-          <select className="w-full p-3 border rounded-lg" required value={service} onChange={e => setService(e.target.value)}>
+        <h2 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Request a Service</h2>
+        <form className="bg-white p-4 md:p-8 rounded-xl shadow-md space-y-4 md:space-y-6" onSubmit={handleSubmit}>
+          <input type="text" placeholder="Full Name" className="w-full p-2 md:p-3 border rounded-lg text-sm md:text-base" required value={name} onChange={e => setName(e.target.value)} />
+          <input type="email" placeholder="Email Address" className="w-full p-2 md:p-3 border rounded-lg text-sm md:text-base" required value={email} onChange={e => setEmail(e.target.value)} />
+          <input type="tel" placeholder="Phone Number (optional)" className="w-full p-2 md:p-3 border rounded-lg text-sm md:text-base" value={phone} onChange={e => setPhone(e.target.value)} />
+          <select className="w-full p-2 md:p-3 border rounded-lg text-sm md:text-base" required value={service} onChange={e => setService(e.target.value)}>
             <option value="">Select Service Type</option>
             <option value="Mobile Notary">Mobile Notary</option>
             <option value="Online Notary">Online Notary</option>
             <option value="Business Notary">Business Notary</option>
           </select>
-          <select className="w-full p-3 border rounded-lg" required value={urgency} onChange={e => setUrgency(e.target.value)}>
+          <select className="w-full p-2 md:p-3 border rounded-lg text-sm md:text-base" required value={urgency} onChange={e => setUrgency(e.target.value)}>
             <option value="normal">Normal (Standard Service)</option>
             <option value="urgent">Urgent (5-24 hours, extra charge)</option>
             <option value="rush">Rush (0-5 hours, highest priority, extra charge)</option>
           </select>
-          <textarea placeholder="Notes / Additional Information" className="w-full p-3 border rounded-lg" rows={4} value={notes} onChange={e => setNotes(e.target.value)}></textarea>
-          <button type="submit" className="bg-green-700 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-800 w-full" disabled={loading}>
+          <textarea placeholder="Notes / Additional Information" className="w-full p-2 md:p-3 border rounded-lg text-sm md:text-base" rows={4} value={notes} onChange={e => setNotes(e.target.value)}></textarea>
+          <button type="submit" className="bg-green-700 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg font-semibold hover:bg-green-800 w-full text-sm md:text-base" disabled={loading}>
             {loading ? "Submitting..." : "Submit Request"}
           </button>
           {error && <div className="text-red-600 mt-2">{error}</div>}
@@ -116,8 +115,8 @@ const RequestPage: React.FC = () => {
 
         {/* Request History Section */}
         {isLoggedIn && (
-          <div className="mt-10">
-            <h3 className="text-2xl font-bold mb-4">Your Request History</h3>
+          <div className="mt-6 md:mt-10">
+            <h3 className="text-xl md:text-2xl font-bold mb-2 md:mb-4">Your Request History</h3>
             {historyLoading ? (
               <div>Loading...</div>
             ) : historyError ? (
@@ -125,13 +124,13 @@ const RequestPage: React.FC = () => {
             ) : history.length === 0 ? (
               <div className="text-gray-600">No previous requests found.</div>
             ) : (
-              <ul className="space-y-4">
+              <ul className="space-y-2 md:space-y-4">
                 {history.map((req, idx) => (
-                  <li key={req.id || idx} className="bg-white p-4 rounded-lg shadow">
-                    <div className="font-semibold">{req.service} ({req.status})</div>
-                    <div className="text-sm text-gray-700">Requested: {req.created_at}</div>
-                    <div className="text-sm">Urgency: {req.urgency}</div>
-                    <div className="text-sm">Notes: {req.notes}</div>
+                  <li key={req.id || idx} className="bg-white p-2 md:p-4 rounded-lg shadow">
+                    <div className="font-semibold text-sm md:text-base">{req.service} ({req.status})</div>
+                    <div className="text-xs md:text-sm text-gray-700">Requested: {req.created_at}</div>
+                    <div className="text-xs md:text-sm">Urgency: {req.urgency}</div>
+                    <div className="text-xs md:text-sm">Notes: {req.notes}</div>
                   </li>
                 ))}
               </ul>
@@ -139,9 +138,9 @@ const RequestPage: React.FC = () => {
           </div>
         )}
       </div>
-      <div className="bg-gray-100 p-6 rounded-xl shadow-md">
-        <h3 className="text-xl font-bold mb-4">Instructions</h3>
-        <ul className="list-disc list-inside space-y-2">
+      <div className="bg-gray-100 p-4 md:p-6 rounded-xl shadow-md mt-6 md:mt-0">
+        <h3 className="text-lg md:text-xl font-bold mb-2 md:mb-4">Instructions</h3>
+        <ul className="list-disc list-inside space-y-1 md:space-y-2 text-sm md:text-base">
             <li>Please include date and time of the appointment.</li>
             <li>Please bring completed documents that require notarization.</li>
             <li>Accepted forms of ID: Driver&apos;s License, Passport, or Government-issued ID.</li>
