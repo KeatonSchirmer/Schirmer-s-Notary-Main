@@ -8,7 +8,7 @@ export default function Navbar() {
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto flex justify-between items-center px-4 md:px-6 py-4">
-        <h1 className="text-xl md:text-2xl font-bold text-black">Schirmer's Notary</h1>
+  <h1 className="text-xl md:text-2xl font-bold text-black">Schirmer&apos;s Notary</h1>
         {/* Hamburger for mobile */}
         <button
           className="md:hidden p-2 rounded focus:outline-none focus:ring-2 focus:ring-green-700"
