@@ -36,7 +36,7 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="max-w-sm mx-auto py-10 md:py-16 px-4 md:px-6">
+        <div className="text-black max-w-sm mx-auto py-10 md:py-16 px-4 md:px-6">
             <h2 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6 text-center">Client Login</h2>
             <form className="bg-white p-4 md:p-8 rounded-xl shadow-md space-y-4 md:space-y-6" onSubmit={handleSubmit}>
                 <input type="email" placeholder="Email" className="w-full p-2 md:p-3 border rounded-lg text-sm md:text-base" required value={email} onChange={e => setEmail(e.target.value)} />

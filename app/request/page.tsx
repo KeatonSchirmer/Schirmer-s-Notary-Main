@@ -2,11 +2,13 @@
 "use client";
 
 import { submitRequest } from "./utils";
-
 import React, { useState, useEffect } from "react";
+import Calendar from "react-calendar";
+import 'react-calendar/dist/Calendar.css';
 import { useAuth } from "../auth-context";
 
 const RequestPage: React.FC = () => {
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -89,6 +91,16 @@ const RequestPage: React.FC = () => {
   return (
     <div className="text-black max-w-6xl mx-auto py-10 md:py-16 px-4 md:px-6 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
       <div>
+        <h3 className="text-lg md:text-xl font-bold mb-4">Select Appointment Date</h3>
+        <Calendar
+          onChange={setSelectedDate}
+          value={selectedDate}
+          minDate={new Date()}
+          className="mb-6 rounded-xl shadow"
+        />
+        {selectedDate && (
+          <div className="mb-4 text-green-700 font-semibold">Selected: {selectedDate.toLocaleDateString()}</div>
+        )}
         <h2 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Request a Service</h2>
         <form className="bg-white p-4 md:p-8 rounded-xl shadow-md space-y-4 md:space-y-6" onSubmit={handleSubmit}>
           <input type="text" placeholder="Full Name" className="w-full p-2 md:p-3 border rounded-lg text-sm md:text-base" required value={name} onChange={e => setName(e.target.value)} />
