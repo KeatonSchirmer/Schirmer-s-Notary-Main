@@ -87,7 +87,7 @@ const RequestPage: React.FC = () => {
   }, [isLoggedIn]);
 
   return (
-    <div className="max-w-6xl mx-auto py-10 md:py-16 px-4 md:px-6 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
+    <div className="text-black max-w-6xl mx-auto py-10 md:py-16 px-4 md:px-6 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
       <div>
         <h2 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Request a Service</h2>
         <form className="bg-white p-4 md:p-8 rounded-xl shadow-md space-y-4 md:space-y-6" onSubmit={handleSubmit}>

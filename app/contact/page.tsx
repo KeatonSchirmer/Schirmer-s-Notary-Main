@@ -35,7 +35,7 @@ export default function Contact() {
     };
 
     return (
-        <div className="max-w-6xl mx-auto py-10 md:py-16 px-4 md:px-6 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
+        <div className="text-black max-w-6xl mx-auto py-10 md:py-16 px-4 md:px-6 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
             <div className="bg-gray-100 p-4 md:p-6 rounded-xl shadow-md">
                 <h2 className="text-xl md:text-2xl font-bold mb-2 md:mb-4">Contact Information</h2>
                 <p className="text-sm md:text-base">Email: <a href="mailto:schirmer.nikolas@gmail.com" className="text-green-700">schirmer.nikolas@gmail.com</a></p>
