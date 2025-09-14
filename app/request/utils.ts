@@ -11,7 +11,7 @@ export async function submitRequest(data: {
   id_verification?: string;
   witness?: string;
 }) {
-  const res = await fetch('http://localhost:5000/jobs/request', {
+  const res = await fetch('http://schirmer-s-notary-backend.onrender.com/jobs/request', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

@@ -8,13 +8,63 @@ import 'react-calendar/dist/Calendar.css';
 import { useAuth } from "../auth-context";
 
 const RequestPage: React.FC = () => {
+  const [availableSlots, setAvailableSlots] = useState<string[]>([]);
+  const [busySlots, setBusySlots] = useState<{ start: string; end: string }[]>([]);
+  function generateSlots(date: Date) {
+    const slots: string[] = [];
+    const startHour = 9;
+    const endHour = 17;
+    for (let hour = startHour; hour < endHour; hour++) {
+      for (let min of [0, 30]) {
+        const slot = new Date(date);
+        slot.setHours(hour, min, 0, 0);
+        slots.push(slot.toISOString());
+      }
+    }
+    return slots;
+  }
+  function isSlotAvailable(slot: string, busy: { start: string; end: string }[]) {
+    const slotStart = new Date(slot);
+    const slotEnd = new Date(slotStart.getTime() + 30 * 60000);
+    return !busy.some(b => {
+      const busyStart = new Date(b.start);
+      const busyEnd = new Date(b.end);
+      return slotStart < busyEnd && slotEnd > busyStart;
+    });
+  }
   const [selectedDate, setSelectedDate] = useState<Value>(null);
+  useEffect(() => {
+    async function fetchBusySlots(date: Date) {
+      const dateStr = date.toISOString().split('T')[0];
+      const localRes = await fetch(`http://schirmer-s-notary-backend.onrender.com/calendar/local`);
+      const localData = await localRes.json();
+      const googleRes = await fetch(`http://schirmer-s-notary-backend.onrender.com/calendar/`);
+      const googleData = await googleRes.json();
+      const busy: { start: string; end: string }[] = [];
+      for (const e of localData.events || []) {
+        if (e.start_date && e.end_date && e.start_date.startsWith(dateStr)) {
+          busy.push({ start: e.start_date, end: e.end_date });
+        }
+      }
+      for (const e of googleData.events || []) {
+        if (e.start && e.end && e.start.dateTime && e.end.dateTime && e.start.dateTime.startsWith(dateStr)) {
+          busy.push({ start: e.start.dateTime, end: e.end.dateTime });
+        }
+      }
+      setBusySlots(busy);
+      const slots = generateSlots(date);
+  setAvailableSlots(slots.filter(slot => isSlotAvailable(slot, busy)));
+    }
+    if (selectedDate && !Array.isArray(selectedDate)) {
+      fetchBusySlots(selectedDate);
+    } else {
+      setAvailableSlots([]);
+    }
+  }, [selectedDate]);
 
-  // Helper to display selected date
   const getSelectedDateString = () => {
     if (!selectedDate) return "";
     if (Array.isArray(selectedDate)) {
-      // If range, show start date
       return selectedDate[0] ? selectedDate[0].toLocaleDateString() : "";
     }
     return selectedDate.toLocaleDateString();
@@ -112,6 +162,22 @@ const RequestPage: React.FC = () => {
         {selectedDate && (
           <div className="mb-4 text-green-700 font-semibold">Selected: {getSelectedDateString()}</div>
         )}
+        {selectedDate && !Array.isArray(selectedDate) && (
+          <div className="mb-6">
+            <h4 className="font-bold mb-2">Available Appointment Times</h4>
+            {availableSlots.length === 0 ? (
+              <div className="text-gray-500">No available slots for this day.</div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                {availableSlots.map(slot => (
+                  <button key={slot} className="bg-green-100 hover:bg-green-200 text-green-700 px-2 py-1 rounded" onClick={() => setNotes(`Requested time: ${new Date(slot).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`)}>
+                    {new Date(slot).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         <h2 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Request a Service</h2>
         <form className="bg-white p-4 md:p-8 rounded-xl shadow-md space-y-4 md:space-y-6" onSubmit={handleSubmit}>
           <input type="text" placeholder="Full Name" className="w-full p-2 md:p-3 border rounded-lg text-sm md:text-base" required value={name} onChange={e => setName(e.target.value)} />
@@ -136,7 +202,6 @@ const RequestPage: React.FC = () => {
           {success && <div className="text-green-600 mt-2">{success}</div>}
         </form>
 
-        {/* Request History Section */}
         {isLoggedIn && (
           <div className="mt-6 md:mt-10">
             <h3 className="text-xl md:text-2xl font-bold mb-2 md:mb-4">Your Request History</h3>
