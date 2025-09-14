@@ -7,7 +7,6 @@ import { useAuth } from "../auth-context";
 
 const RequestPage: React.FC = () => {
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
-  // Helper: generate 30-min slots for today
   function generateSlots(date: Date) {
     const slots: string[] = [];
     const startHour = 9;
@@ -55,7 +54,6 @@ const RequestPage: React.FC = () => {
     fetchBusySlots(today);
   }, []);
 
-  // Removed unused selectedDate and getSelectedDateString
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
