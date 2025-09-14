@@ -129,16 +129,26 @@ const RequestPage: React.FC = () => {
           />
         </div>
         <div className="mb-6">
-          <h4 className="font-bold mb-2">{new Date(selectedDate).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</h4>
+          <h4 className="font-bold mb-2">
+            {(() => {
+              const [year, month, day] = selectedDate.split('-').map(Number);
+              const displayDate = new Date(year, month - 1, day);
+              return displayDate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            })()}
+          </h4>
           {availableSlots.length === 0 ? (
             <div className="text-gray-500">No available slots for this day.</div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {availableSlots.map(slot => (
-                <button key={slot} className="bg-green-100 hover:bg-green-200 text-green-700 px-2 py-1 rounded" onClick={() => setNotes(`Requested time: ${new Date(slot).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`)}>
-                  {new Date(slot).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </button>
-              ))}
+              {availableSlots.map(slot => {
+                // slot is ISO string: YYYY-MM-DDTHH:mm
+                const [datePart, timePart] = slot.split('T');
+                return (
+                  <button key={slot} className="bg-green-100 hover:bg-green-200 text-green-700 px-2 py-1 rounded" onClick={() => setNotes(`Requested time: ${timePart}`)}>
+                    {timePart}
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>
