@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 
 // Days of week for picker
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -48,8 +48,12 @@ export default function AvailabilityPicker({
       if (!res.ok) throw new Error(await res.text());
       setSuccess("Availability saved.");
       if (onSave) onSave({ officeStart, officeEnd, availableDays });
-    } catch (err: any) {
-      setError(err.message || "Failed to save availability.");
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Failed to save availability.");
+      }
     } finally {
       setSaving(false);
     }

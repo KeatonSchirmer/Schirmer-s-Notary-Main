@@ -1,4 +1,3 @@
-type Value = Date | [Date | null, Date | null] | null;
 "use client";
 
 import { submitRequest } from "./utils";
