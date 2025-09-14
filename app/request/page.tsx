@@ -13,7 +13,7 @@ const RequestPage: React.FC = () => {
     const startHour = 9;
     const endHour = 17;
     for (let hour = startHour; hour < endHour; hour++) {
-      for (let min of [0, 30]) {
+      for (const min of [0, 30]) {
         const slot = new Date(date);
         slot.setHours(hour, min, 0, 0);
         slots.push(slot.toISOString());
@@ -55,14 +55,7 @@ const RequestPage: React.FC = () => {
     fetchBusySlots(today);
   }, []);
 
-  const [selectedDate, setSelectedDate] = useState<Value>(null);
-  const getSelectedDateString = () => {
-    if (!selectedDate) return "";
-    if (Array.isArray(selectedDate)) {
-      return selectedDate[0] ? selectedDate[0].toLocaleDateString() : "";
-    }
-    return selectedDate.toLocaleDateString();
-  };
+  // Removed unused selectedDate and getSelectedDateString
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
