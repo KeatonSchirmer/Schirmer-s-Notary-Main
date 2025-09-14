@@ -3,13 +3,11 @@ type Value = Date | [Date | null, Date | null] | null;
 
 import { submitRequest } from "./utils";
 import React, { useState, useEffect } from "react";
-import Calendar from "react-calendar";
-import 'react-calendar/dist/Calendar.css';
 import { useAuth } from "../auth-context";
 
 const RequestPage: React.FC = () => {
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
-  const [busySlots, setBusySlots] = useState<{ start: string; end: string }[]>([]);
+  // Helper: generate 30-min slots for today
   function generateSlots(date: Date) {
     const slots: string[] = [];
     const startHour = 9;
@@ -32,7 +30,6 @@ const RequestPage: React.FC = () => {
       return slotStart < busyEnd && slotEnd > busyStart;
     });
   }
-  const [selectedDate, setSelectedDate] = useState<Value>(null);
   useEffect(() => {
     async function fetchBusySlots(date: Date) {
       const dateStr = date.toISOString().split('T')[0];
@@ -51,17 +48,14 @@ const RequestPage: React.FC = () => {
           busy.push({ start: e.start.dateTime, end: e.end.dateTime });
         }
       }
-      setBusySlots(busy);
       const slots = generateSlots(date);
-  setAvailableSlots(slots.filter(slot => isSlotAvailable(slot, busy)));
+      setAvailableSlots(slots.filter(slot => isSlotAvailable(slot, busy)));
     }
-    if (selectedDate && !Array.isArray(selectedDate)) {
-      fetchBusySlots(selectedDate);
-    } else {
-      setAvailableSlots([]);
-    }
-  }, [selectedDate]);
+    const today = new Date();
+    fetchBusySlots(today);
+  }, []);
 
+  const [selectedDate, setSelectedDate] = useState<Value>(null);
   const getSelectedDateString = () => {
     if (!selectedDate) return "";
     if (Array.isArray(selectedDate)) {
@@ -82,14 +76,14 @@ const RequestPage: React.FC = () => {
   type RequestHistoryItem = {
     id: number;
     service: string;
-    status: string;
-    created_at: string;
-    urgency: string;
-    notes: string;
+    status?: string;
+    created_at?: string;
+    urgency?: string;
+    notes?: string;
   };
   const [history, setHistory] = useState<RequestHistoryItem[]>([]);
-  const [historyLoading, setHistoryLoading] = useState<boolean>(false);
-  const [historyError, setHistoryError] = useState<string>("");
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -151,33 +145,21 @@ const RequestPage: React.FC = () => {
   return (
     <div className="text-black max-w-6xl mx-auto py-10 md:py-16 px-4 md:px-6 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
       <div>
-        <h3 className="text-lg md:text-xl font-bold mb-4">Select Appointment Date</h3>
-        <Calendar
-          onChange={(value) => setSelectedDate(value)}
-          value={selectedDate}
-          minDate={new Date()}
-          selectRange={false}
-          className="mb-6 rounded-xl shadow"
-        />
-        {selectedDate && (
-          <div className="mb-4 text-green-700 font-semibold">Selected: {getSelectedDateString()}</div>
-        )}
-        {selectedDate && !Array.isArray(selectedDate) && (
-          <div className="mb-6">
-            <h4 className="font-bold mb-2">Available Appointment Times</h4>
-            {availableSlots.length === 0 ? (
-              <div className="text-gray-500">No available slots for this day.</div>
-            ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                {availableSlots.map(slot => (
-                  <button key={slot} className="bg-green-100 hover:bg-green-200 text-green-700 px-2 py-1 rounded" onClick={() => setNotes(`Requested time: ${new Date(slot).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`)}>
-                    {new Date(slot).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+        <h3 className="text-lg md:text-xl font-bold mb-4">Available Appointment Times (Today)</h3>
+        <div className="mb-6">
+          <h4 className="font-bold mb-2">Choose a Time</h4>
+          {availableSlots.length === 0 ? (
+            <div className="text-gray-500">No available slots for today.</div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              {availableSlots.map(slot => (
+                <button key={slot} className="bg-green-100 hover:bg-green-200 text-green-700 px-2 py-1 rounded" onClick={() => setNotes(`Requested time: ${new Date(slot).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`)}>
+                  {new Date(slot).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         <h2 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Request a Service</h2>
         <form className="bg-white p-4 md:p-8 rounded-xl shadow-md space-y-4 md:space-y-6" onSubmit={handleSubmit}>
           <input type="text" placeholder="Full Name" className="w-full p-2 md:p-3 border rounded-lg text-sm md:text-base" required value={name} onChange={e => setName(e.target.value)} />

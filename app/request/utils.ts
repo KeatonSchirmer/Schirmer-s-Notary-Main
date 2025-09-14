@@ -12,7 +12,7 @@ export async function submitRequest(data: {
   witness?: string;
 }) {
   const res = await fetch('http://schirmer-s-notary-backend.onrender.com/jobs/request', {
-    method: 'POST',
+      method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
