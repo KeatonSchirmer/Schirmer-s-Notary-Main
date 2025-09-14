@@ -28,30 +28,24 @@ const RequestPage: React.FC = () => {
       return slotStart < busyEnd && slotEnd > busyStart;
     });
   }
-  useEffect(() => {
-    async function fetchBusySlots(date: Date) {
-      const dateStr = date.toISOString().split('T')[0];
-      const localRes = await fetch(`http://schirmer-s-notary-backend.onrender.com/calendar/local`);
-      const localData = await localRes.json();
-      const googleRes = await fetch(`http://schirmer-s-notary-backend.onrender.com/calendar/`);
-      const googleData = await googleRes.json();
-      const busy: { start: string; end: string }[] = [];
-      for (const e of localData.events || []) {
-        if (e.start_date && e.end_date && e.start_date.startsWith(dateStr)) {
-          busy.push({ start: e.start_date, end: e.end_date });
-        }
-      }
-      for (const e of googleData.events || []) {
-        if (e.start && e.end && e.start.dateTime && e.end.dateTime && e.start.dateTime.startsWith(dateStr)) {
-          busy.push({ start: e.start.dateTime, end: e.end.dateTime });
-        }
-      }
-      const slots = generateSlots(date);
-      setAvailableSlots(slots.filter(slot => isSlotAvailable(slot, busy)));
-    }
+
+  const [selectedDate, setSelectedDate] = useState(() => {
     const today = new Date();
-    fetchBusySlots(today);
-  }, []);
+    return today.toISOString().split('T')[0];
+  });
+
+  useEffect(() => {
+    async function fetchSlots() {
+      try {
+        const res = await fetch(`https://schirmer-s-notary-backend.onrender.com/calendar/slots?date=${selectedDate}`);
+        const data = await res.json();
+        setAvailableSlots((data.slots || []).filter((slot: any) => slot.available).map((slot: any) => `${slot.date}T${slot.time}`));
+      } catch (err) {
+        setAvailableSlots([]);
+      }
+    }
+    fetchSlots();
+  }, [selectedDate]);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -135,11 +129,26 @@ const RequestPage: React.FC = () => {
   return (
     <div className="text-black max-w-6xl mx-auto py-10 md:py-16 px-4 md:px-6 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
       <div>
-        <h3 className="text-lg md:text-xl font-bold mb-4">Available Appointment Times (Today)</h3>
+        <h3 className="text-lg md:text-xl font-bold mb-4">Available Appointment Times</h3>
+        <div className="mb-4">
+          <label className="font-medium mr-2">Select Date:</label>
+          <input
+            type="date"
+            value={selectedDate}
+            min={new Date().toISOString().split('T')[0]}
+            max={(() => {
+              const d = new Date();
+              d.setFullYear(d.getFullYear() + 1);
+              return d.toISOString().split('T')[0];
+            })()}
+            onChange={e => setSelectedDate(e.target.value)}
+            className="p-2 border rounded"
+          />
+        </div>
         <div className="mb-6">
-          <h4 className="font-bold mb-2">Choose a Time</h4>
+          <h4 className="font-bold mb-2">{new Date(selectedDate).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</h4>
           {availableSlots.length === 0 ? (
-            <div className="text-gray-500">No available slots for today.</div>
+            <div className="text-gray-500">No available slots for this day.</div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
               {availableSlots.map(slot => (
