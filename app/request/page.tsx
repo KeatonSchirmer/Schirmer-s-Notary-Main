@@ -6,28 +6,7 @@ import { useAuth } from "../auth-context";
 
 const RequestPage: React.FC = () => {
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
-  function generateSlots(date: Date) {
-    const slots: string[] = [];
-    const startHour = 9;
-    const endHour = 17;
-    for (let hour = startHour; hour < endHour; hour++) {
-      for (const min of [0, 30]) {
-        const slot = new Date(date);
-        slot.setHours(hour, min, 0, 0);
-        slots.push(slot.toISOString());
-      }
-    }
-    return slots;
-  }
-  function isSlotAvailable(slot: string, busy: { start: string; end: string }[]) {
-    const slotStart = new Date(slot);
-    const slotEnd = new Date(slotStart.getTime() + 30 * 60000);
-    return !busy.some(b => {
-      const busyStart = new Date(b.start);
-      const busyEnd = new Date(b.end);
-      return slotStart < busyEnd && slotEnd > busyStart;
-    });
-  }
+  // Removed unused generateSlots and isSlotAvailable
 
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = new Date();
@@ -39,8 +18,12 @@ const RequestPage: React.FC = () => {
       try {
         const res = await fetch(`https://schirmer-s-notary-backend.onrender.com/calendar/slots?date=${selectedDate}`);
         const data = await res.json();
-        setAvailableSlots((data.slots || []).filter((slot: any) => slot.available).map((slot: any) => `${slot.date}T${slot.time}`));
-      } catch (err) {
+        setAvailableSlots(
+          (data.slots || [])
+            .filter((slot: { id: string | number; date: string; time: string; available: boolean }) => slot.available)
+            .map((slot: { date: string; time: string }) => `${slot.date}T${slot.time}`)
+        );
+      } catch {
         setAvailableSlots([]);
       }
     }
