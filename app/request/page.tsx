@@ -6,7 +6,6 @@ import { useAuth } from "../auth-context";
 
 const RequestPage: React.FC = () => {
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
-  // Removed unused generateSlots and isSlotAvailable
 
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = new Date();
@@ -114,7 +113,7 @@ const RequestPage: React.FC = () => {
       <div>
         <h3 className="text-lg md:text-xl font-bold mb-4">Available Appointment Times</h3>
         <div className="mb-4">
-          <label className="font-medium mr-2">Select Date:</label>
+          <label className="font-medium mr-2 text-gray-800">Select Date:</label>
           <input
             type="date"
             value={selectedDate}
@@ -125,11 +124,12 @@ const RequestPage: React.FC = () => {
               return d.toISOString().split('T')[0];
             })()}
             onChange={e => setSelectedDate(e.target.value)}
-            className="p-2 border rounded"
+            className="p-2 border rounded bg-white text-gray-900 w-full md:w-auto"
+            style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}
           />
         </div>
         <div className="mb-6">
-          <h4 className="font-bold mb-2">
+          <h4 className="font-bold mb-2 text-gray-900">
             {(() => {
               const [year, month, day] = selectedDate.split('-').map(Number);
               const displayDate = new Date(year, month - 1, day);
@@ -139,12 +139,16 @@ const RequestPage: React.FC = () => {
           {availableSlots.length === 0 ? (
             <div className="text-gray-500">No available slots for this day.</div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
               {availableSlots.map(slot => {
-                // slot is ISO string: YYYY-MM-DDTHH:mm
                 const [datePart, timePart] = slot.split('T');
                 return (
-                  <button key={slot} className="bg-green-100 hover:bg-green-200 text-green-700 px-2 py-1 rounded" onClick={() => setNotes(`Requested time: ${timePart}`)}>
+                  <button
+                    key={slot}
+                    className="bg-white border border-green-300 text-green-700 px-4 py-3 rounded-lg shadow-sm w-full text-base font-semibold hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-green-400"
+                    style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.07)" }}
+                    onClick={() => setNotes(`Requested time: ${timePart}`)}
+                  >
                     {timePart}
                   </button>
                 );

@@ -24,7 +24,7 @@ export default function Navbar() {
           <Link href="/" className="hover:text-green-700">Home</Link>
           <Link href="/services" className="hover:text-green-700">Services</Link>
           <Link href="/about" className="hover:text-green-700">About</Link>
-          <Link href="/request" className="hover:text-green-700">Jobs</Link>
+          <Link href="/request" className="hover:text-green-700">Book</Link>
           <Link href="/contact" className="hover:text-green-700">Contact</Link>
           <Link href="/login" className="px-3 py-1 rounded-lg bg-green-700 text-white hover:bg-green-800">Login</Link>
         </div>
@@ -34,7 +34,7 @@ export default function Navbar() {
           <Link href="/" className="hover:text-green-700" onClick={() => setMenuOpen(false)}>Home</Link>
           <Link href="/services" className="hover:text-green-700" onClick={() => setMenuOpen(false)}>Services</Link>
           <Link href="/about" className="hover:text-green-700" onClick={() => setMenuOpen(false)}>About</Link>
-          <Link href="/request" className="hover:text-green-700" onClick={() => setMenuOpen(false)}>Request</Link>
+          <Link href="/request" className="hover:text-green-700" onClick={() => setMenuOpen(false)}>Book</Link>
           <Link href="/contact" className="hover:text-green-700" onClick={() => setMenuOpen(false)}>Contact</Link>
           <Link href="/login" className="px-3 py-1 rounded-lg bg-green-700 text-white hover:bg-green-800" onClick={() => setMenuOpen(false)}>Login</Link>
         </div>
