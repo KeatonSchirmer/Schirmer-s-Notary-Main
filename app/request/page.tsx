@@ -16,7 +16,7 @@ const RequestPage: React.FC = () => {
   useEffect(() => {
     async function fetchSlots() {
       try {
-        const res = await fetch(`https://schirmer-s-notary-backend.onrender.com/calendar/slots?date=${selectedDate}`);
+  const res = await fetch(`https://schirmer-s-notary-backend.onrender.com/calendar/slots?date=${selectedDate}`);
         const data = await res.json();
         setAvailableSlots(
           (data.slots || [])
@@ -90,7 +90,7 @@ const RequestPage: React.FC = () => {
     setHistoryLoading(true);
     setHistoryError("");
     try {
-      const res = await fetch("http://schirmer-s-notary-backend.onrender.com/client/requests", { credentials: "include" });
+  const res = await fetch("https://schirmer-s-notary-backend.onrender.com/client/requests", { credentials: "include" });
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
       setHistory(data.requests || []);
