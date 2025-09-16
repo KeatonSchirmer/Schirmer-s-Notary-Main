@@ -55,7 +55,7 @@ export default function Services() {
                 <h4 className="text-lg md:text-xl font-semibold text-green-700 mb-2 md:mb-3">General Mobile Notarizations</h4>
                 <ul className="list-disc list-inside space-y-1 md:space-y-2 text-sm md:text-base">
                 <li>${mobileBaseP} per document + ${mobileTravelP} travel fee within 15 miles</li>
-                <li>$0.75-$1.00 per mile after 15 miles</li>
+                <li>$1.00 per mile after 15 miles</li>
                 <li>Add-ons: ${mobileAddonP} per extra signer, seal, or document</li>
                 </ul>
             </div>
