@@ -1,7 +1,6 @@
 "use client";
 import React, { useState } from "react";
 
-// Days of week for picker
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 export default function AvailabilityPicker({
@@ -37,7 +36,6 @@ export default function AvailabilityPicker({
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          // Add user id header if needed: "X-User-Id": userId
         },
         body: JSON.stringify({
           officeStart,
