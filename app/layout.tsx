@@ -41,7 +41,7 @@ export default function RootLayout({
               <Link href="/" className="hover:text-white">Home</Link>
               <Link href="/services" className="hover:text-white">Services</Link>
               <Link href="/about" className="hover:text-white">About</Link>
-              <Link href="/request" className="hover:text-white">Request</Link>
+              <Link href="/book" className="hover:text-white">Book</Link>
               <Link href="/contact" className="hover:text-white">Contact</Link>
             </div>
             <p>© {new Date().getFullYear()} Schirmer&apos;s Notary. All rights reserved.</p>
