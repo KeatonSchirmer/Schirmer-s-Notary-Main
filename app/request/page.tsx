@@ -5,7 +5,6 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../auth-context";
 
 const RequestPage: React.FC = () => {
-  const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
 
   const [selectedDate, setSelectedDate] = useState(() => {
@@ -16,21 +15,11 @@ const RequestPage: React.FC = () => {
   useEffect(() => {
     async function fetchSlots() {
       try {
-        const res = await fetch(`https://schirmer-s-notary-backend.onrender.com/calendar/slots?date=${selectedDate}`);
+  const res = await fetch(`https://schirmer-s-notary-backend.onrender.com/calendar/slots?date=${selectedDate}`);
         const data = await res.json();
-        const now = new Date();
-        const isToday = selectedDate === now.toISOString().split('T')[0];
         setAvailableSlots(
           (data.slots || [])
-            .filter((slot: { id: string | number; date: string; time: string; available: boolean }) => {
-              if (!slot.available) return false;
-              if (isToday) {
-                const [hour, minute] = slot.time.split(":").map(Number);
-                const slotDate = new Date(selectedDate + "T" + slot.time);
-                return slotDate > now;
-              }
-              return true;
-            })
+            .filter((slot: { id: string | number; date: string; time: string; available: boolean }) => slot.available)
             .map((slot: { date: string; time: string }) => `${slot.date}T${slot.time}`)
         );
       } catch {
@@ -45,12 +34,11 @@ const RequestPage: React.FC = () => {
   const [phone, setPhone] = useState("");
   const [service, setService] = useState("");
   const [notes, setNotes] = useState("");
-  const [time, setTime] = useState("");
   const [urgency, setUrgency] = useState("normal");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const { isLoggedIn, userId } = useAuth();
+  const { isLoggedIn } = useAuth();
   type RequestHistoryItem = {
     id: number;
     service: string;
@@ -69,34 +57,29 @@ const RequestPage: React.FC = () => {
     setError("");
     setSuccess("");
     try {
-      if (!selectedSlot) {
-        setError("Please select an appointment time.");
-        setLoading(false);
-        return;
-      }
-      const [date, time] = selectedSlot.split("T");
-      const response = await submitRequest({
+      await submitRequest({
         name,
         email,
-        client_id: userId || "",
+        document_type: "Notary Document",
         service,
+        signer: name,
+        location: notes,
+        wording: notes,
         urgency,
-        date,
-        time,
-        location: '',
-        notes,
-        journal_id: undefined,
+        date: "",
+        id_verification: "no",
+        witness: "no"
       });
-      if (response && response.message) {
-        setSuccess("Booking submitted! You will receive a confirmation soon.");
-      } else {
-        setError("Booking could not be submitted. Please try again or contact support.");
-      }
-      setName(""); setEmail(""); setPhone(""); setService(""); setNotes(""); setSelectedSlot(null);
+      setSuccess("Request submitted successfully!");
+      setName(""); setEmail(""); setPhone(""); setService(""); setNotes("");
       if (isLoggedIn) fetchHistory();
     } catch (err: unknown) {
       console.error("Error submitting request:", err);
-      setError("Booking could not be submitted. Please try again or contact support.");
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Failed to submit request.");
+      }
     } finally {
       setLoading(false);
     }
@@ -156,19 +139,15 @@ const RequestPage: React.FC = () => {
           {availableSlots.length === 0 ? (
             <div className="text-gray-500">No available slots for this day.</div>
           ) : (
-            <div
-              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3"
-              style={{ maxHeight: '320px', overflowY: 'auto', minHeight: '120px' }}
-            >
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
               {availableSlots.map(slot => {
                 const [datePart, timePart] = slot.split('T');
-                const isSelected = selectedSlot === slot;
                 return (
                   <button
                     key={slot}
-                    className={`bg-white border ${isSelected ? 'border-green-700 bg-green-100' : 'border-green-300'} text-green-700 px-4 py-3 rounded-lg shadow-sm w-full text-base font-semibold hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-green-400`}
+                    className="bg-white border border-green-300 text-green-700 px-4 py-3 rounded-lg shadow-sm w-full text-base font-semibold hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-green-400"
                     style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.07)" }}
-                    onClick={() => setSelectedSlot(slot)}
+                    onClick={() => setNotes(`Requested time: ${timePart}`)}
                   >
                     {timePart}
                   </button>
@@ -228,12 +207,11 @@ const RequestPage: React.FC = () => {
       <div className="bg-gray-100 p-4 md:p-6 rounded-xl shadow-md mt-6 md:mt-0">
         <h3 className="text-lg md:text-xl font-bold mb-2 md:mb-4">Instructions</h3>
         <ul className="list-disc list-inside space-y-1 md:space-y-2 text-sm md:text-base">
-            <li>Please include location of the appointment.</li>
+            <li>Please include date and time of the appointment.</li>
             <li>Please bring completed documents that require notarization.</li>
             <li>Accepted forms of ID: Driver&apos;s License, Passport, or Government-issued ID.</li>
             <li>Ensure all signers are present during the appointment.</li>
             <li>For online notarizations, ensure you have a stable internet connection.</li>
-            <li>Please be prepared for contact on further instructions.</li>
         </ul>
       </div>         
     </div>
