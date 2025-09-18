@@ -75,7 +75,7 @@ const RequestPage: React.FC = () => {
         return;
       }
       const [date, time] = selectedSlot.split("T");
-      const response = await submitRequest({
+      const payload = {
         name,
         email,
         client_id: userId || "",
@@ -86,7 +86,17 @@ const RequestPage: React.FC = () => {
         location: '',
         notes,
         journal_id: undefined,
-      });
+      };
+      console.log("Booking payload:", payload);
+      let response;
+      try {
+        response = await submitRequest(payload);
+      } catch (err) {
+        console.error("Backend error:", err);
+        setError("Booking could not be submitted. Please try again or contact support.\n" + (err instanceof Error ? err.message : ""));
+        setLoading(false);
+        return;
+      }
       if (response && response.message) {
         setSuccess("Booking submitted! You will receive a confirmation soon.");
       } else {
@@ -94,9 +104,6 @@ const RequestPage: React.FC = () => {
       }
       setName(""); setEmail(""); setPhone(""); setService(""); setNotes(""); setSelectedSlot(null);
       if (isLoggedIn) fetchHistory();
-    } catch (err: unknown) {
-      console.error("Error submitting request:", err);
-      setError("Booking could not be submitted. Please try again or contact support.");
     } finally {
       setLoading(false);
     }
