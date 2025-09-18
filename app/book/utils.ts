@@ -1,15 +1,14 @@
 export async function submitRequest(data: {
   name: string;
   email: string;
-  document_type: string;
+  client_id?: string | number;
   service: string;
-  signer: string;
   urgency?: string;
   date?: string;
+  time?: string;
   location: string;
-  wording?: string;
-  id_verification?: string;
-  witness?: string;
+  notes?: string;
+  journal_id?: string;
 }) {
   const res = await fetch('http://schirmer-s-notary-backend.onrender.com/jobs/request', {
       method: 'POST',
