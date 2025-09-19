@@ -64,6 +64,15 @@ const RequestPage: React.FC = () => {
   const [historyError, setHistoryError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
+    const res = await fetch("https://schirmer-s-notary-backend.onrender.com/jobs/request", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ name, email, phone, service, urgency, notes })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+    setHistory(data.requests || []);
     e.preventDefault();
     setLoading(true);
     setError("");
@@ -87,20 +96,27 @@ const RequestPage: React.FC = () => {
         notes,
         journal_id: undefined,
       };
-      console.log("Booking payload:", payload);
+      console.log("[handleSubmit] Booking payload:", payload);
       let response;
       try {
         response = await submitRequest(payload);
       } catch (err) {
-        console.error("Backend error:", err);
-        setError("Booking could not be submitted. Please try again or contact support.\n" + (err instanceof Error ? err.message : ""));
+        if (err instanceof Error) {
+          setError("Booking could not be submitted.\n" + err.message);
+          console.error("[handleSubmit] Error submitting booking:", err.message);
+        } else {
+          setError("Booking could not be submitted. Unknown error.");
+          console.error("[handleSubmit] Unknown error submitting booking:", err);
+        }
         setLoading(false);
         return;
       }
       if (response && response.message) {
         setSuccess("Booking submitted! You will receive a confirmation soon.");
+        console.log("[handleSubmit] Booking success:", response);
       } else {
-        setError("Booking could not be submitted. Please try again or contact support.");
+        setError("Booking could not be submitted. No success message returned.");
+        console.error("[handleSubmit] No success message returned:", response);
       }
       setName(""); setEmail(""); setPhone(""); setService(""); setNotes(""); setSelectedSlot(null);
       if (isLoggedIn) fetchHistory();
@@ -205,8 +221,12 @@ const RequestPage: React.FC = () => {
             {loading ? "Submitting..." : "Submit Request"}
           </button>
           {error && <div className="text-red-600 mt-2">{error}</div>}
-          {success && <div className="text-green-600 mt-2">{success}</div>}
         </form>
+        {success && (
+          <div className="bg-green-100 border border-green-400 text-green-800 rounded-lg px-4 py-3 mt-4 text-center font-semibold">
+            {success}
+          </div>
+        )}
 
         {isLoggedIn && (
           <div className="mt-6 md:mt-10">
