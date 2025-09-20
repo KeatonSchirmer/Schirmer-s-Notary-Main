@@ -7,39 +7,11 @@ import { useAuth } from "../auth-context";
 const RequestPage: React.FC = () => {
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
-
+  const [bookedSlots, setBookedSlots] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = new Date();
     return today.toISOString().split('T')[0];
   });
-
-  useEffect(() => {
-    async function fetchSlots() {
-      try {
-        const res = await fetch(`https://schirmer-s-notary-backend.onrender.com/calendar/slots?date=${selectedDate}`);
-        const data = await res.json();
-        const now = new Date();
-        const isToday = selectedDate === now.toISOString().split('T')[0];
-        setAvailableSlots(
-          (data.slots || [])
-            .filter((slot: { id: string | number; date: string; time: string; available: boolean }) => {
-              if (!slot.available) return false;
-              if (isToday) {
-                const [hour, minute] = slot.time.split(":").map(Number);
-                const slotDate = new Date(selectedDate + "T" + slot.time);
-                return slotDate > now;
-              }
-              return true;
-            })
-            .map((slot: { date: string; time: string }) => `${slot.date}T${slot.time}`)
-        );
-      } catch {
-        setAvailableSlots([]);
-      }
-    }
-    fetchSlots();
-  }, [selectedDate]);
-
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -50,6 +22,60 @@ const RequestPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  useEffect(() => {
+    async function fetchSlotsAndBookings() {
+      try {
+        const res = await fetch(`https://schirmer-s-notary-backend.onrender.com/calendar/slots?date=${selectedDate}`);
+        const data = await res.json();
+        const now = new Date();
+        const isToday = selectedDate === now.toISOString().split('T')[0];
+        const allSlotsRaw = (data.slots || []);
+          const jobsRes = await fetch(`https://schirmer-s-notary-backend.onrender.com/jobs/`);
+          let booked: string[] = [];
+          if (jobsRes.ok) {
+            const jobsData = await jobsRes.json();
+            booked = (jobsData.jobs || jobsData || [])
+              .filter((b: { status: string }) => b.status === 'pending' || b.status === 'accepted')
+              .map((b: { date: string; time: string }) => `${b.date}T${b.time}`);
+          }
+          setBookedSlots(booked);
+        const padTime = (t: string) => {
+          const [h, m] = t.split(":");
+          return `${h.padStart(2, "0")}:${m.padStart(2, "0")}`;
+        };
+        const normalizeDate = (d: string) => {
+          if (d.includes("-")) return d;
+          const [mm, dd, yyyy] = d.split("/");
+          return `${yyyy}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}`;
+        };
+        const filteredSlots = allSlotsRaw
+          .filter((slot: { date: string; time: string; available: boolean }) => {
+            const slotDateNorm = normalizeDate(slot.date);
+            const slotTimeNorm = padTime(slot.time);
+            const isBooked = booked.some(bk => {
+              const [bDate, bTime] = bk.split("T");
+              const bDateNorm = normalizeDate(bDate);
+              const bTimeNorm = padTime(bTime);
+              return bDateNorm === slotDateNorm && bTimeNorm === slotTimeNorm;
+            });
+            if (isBooked) return false;
+            if (!slot.available) return false;
+            if (isToday) {
+              const slotDateObj = new Date(`${slotDateNorm}T${slotTimeNorm}`);
+              return slotDateObj > now;
+            }
+            return true;
+          })
+          .map((slot: { date: string; time: string }) => `${normalizeDate(slot.date)}T${padTime(slot.time)}`);
+        setAvailableSlots(filteredSlots);
+      } catch {
+        setAvailableSlots([]);
+        setBookedSlots([]);
+      }
+    }
+    fetchSlotsAndBookings();
+  }, [selectedDate, success]);
   const { isLoggedIn, userId } = useAuth();
   type RequestHistoryItem = {
     id: number;
@@ -120,41 +146,24 @@ const RequestPage: React.FC = () => {
     setHistoryLoading(true);
     setHistoryError("");
     try {
-    const res = await fetch("https://schirmer-s-notary-backend.onrender.com/client/requests", { credentials: "include" });
+      const res = await fetch("https://schirmer-s-notary-backend.onrender.com/client/requests", { credentials: "include" });
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
       setHistory(data.requests || []);
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setHistoryError(err.message);
-      } else {
-        setHistoryError("Failed to load history.");
-      }
+    } catch (err) {
+      setHistoryError("Failed to load history.");
     } finally {
       setHistoryLoading(false);
     }
   };
 
+  // success is now declared before useEffect
   useEffect(() => {
     if (isLoggedIn) fetchHistory();
   }, [isLoggedIn]);
 
   return (
     <div className="text-black max-w-6xl mx-auto py-10 md:py-16 px-4 md:px-6 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
-      <div className="w-full max-w-2xl mx-auto">
-        <div className="relative" style={{ paddingBottom: "150%", height: 0 }}>
-          <iframe
-            src="https://docs.google.com/forms/d/e/1FAIpQLSem9Ks8x-KQDNXYsIHpnwBdhJXYZo3I88ImgMGsi4cmDkH2zA/viewform?embedded=true"
-            title="Booking Form"
-            className="absolute top-0 left-0 w-full h-full border-none rounded-xl shadow-md"
-            style={{ minHeight: "600px", maxHeight: "100vh" }}
-            allowFullScreen
-          >
-            Loading…
-          </iframe>
-        </div>
-      </div>
-      {/*
       <div>
         <h3 className="text-lg md:text-xl font-bold mb-4">Available Appointment Times</h3>
         <div className="mb-4">
@@ -178,32 +187,34 @@ const RequestPage: React.FC = () => {
             {(() => {
               const [year, month, day] = selectedDate.split('-').map(Number);
               const displayDate = new Date(year, month - 1, day);
-              return displayDate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+              return displayDate.toLocaleDateString();
             })()}
           </h4>
-          {availableSlots.length === 0 ? (
-            <div className="text-gray-500">No available slots for this day.</div>
-          ) : (
-            <div
-              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3"
-              style={{ maxHeight: '320px', overflowY: 'auto', minHeight: '120px' }}
-            >
-              {availableSlots.map(slot => {
-                const [datePart, timePart] = slot.split('T');
-                const isSelected = selectedSlot === slot;
-                return (
-                  <button
-                    key={slot}
-                    className={`bg-white border ${isSelected ? 'border-green-700 bg-green-100' : 'border-green-300'} text-green-700 px-4 py-3 rounded-lg shadow-sm w-full text-base font-semibold hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-green-400`}
-                    style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.07)" }}
-                    onClick={() => setSelectedSlot(slot)}
-                  >
-                    {timePart}
-                  </button>
-                );
-              })}
-            </div>
-          )}
+          <div>
+            {availableSlots.length === 0 ? (
+              <div className="text-gray-600">No available slots for this date.</div>
+            ) : (
+              <div
+                className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3"
+                style={{ maxHeight: '320px', overflowY: 'auto', minHeight: '120px' }}
+              >              
+                {availableSlots.map(slot => {
+                  const [datePart, timePart] = slot.split('T');
+                  const isSelected = selectedSlot === slot;
+                  return (
+                    <button
+                      key={slot}
+                      className={`bg-white border ${isSelected ? 'border-green-700 bg-green-100' : 'border-green-300'} text-green-700 px-4 py-3 rounded-lg shadow-sm w-full text-base font-semibold hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-green-400`}
+                      style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.07)" }}
+                      onClick={() => setSelectedSlot(slot)}
+                    >
+                      {timePart}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
         <h2 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Request a Service</h2>
         <form className="bg-white p-4 md:p-8 rounded-xl shadow-md space-y-4 md:space-y-6" onSubmit={handleSubmit}>
@@ -257,7 +268,6 @@ const RequestPage: React.FC = () => {
           </div>
         )}
       </div>
-      */}
       <div className="bg-gray-100 p-4 md:p-6 rounded-xl shadow-md mt-6 md:mt-0">
         <h3 className="text-lg md:text-xl font-bold mb-2 md:mb-4">Instructions</h3>
         <ul className="list-disc list-inside space-y-1 md:space-y-2 text-sm md:text-base">
