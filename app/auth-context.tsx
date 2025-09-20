@@ -18,7 +18,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [userId, setUserId] = useState<number | null>(null);
 
   useEffect(() => {
-    fetch("http://schirmer-s-notary-backend.onrender.com/session", { credentials: "include" })
+    fetch("https://schirmer-s-notary-backend.onrender.com/session", { credentials: "include" })
       .then(res => res.ok ? res.json() : null)
       .then(data => {
         if (data && data.user_id) {

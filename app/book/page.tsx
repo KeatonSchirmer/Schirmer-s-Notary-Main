@@ -64,15 +64,6 @@ const RequestPage: React.FC = () => {
   const [historyError, setHistoryError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
-    const res = await fetch("https://schirmer-s-notary-backend.onrender.com/jobs/request", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ name, email, phone, service, urgency, notes })
-    });
-    if (!res.ok) throw new Error(await res.text());
-    const data = await res.json();
-    setHistory(data.requests || []);
     e.preventDefault();
     setLoading(true);
     setError("");
@@ -124,12 +115,12 @@ const RequestPage: React.FC = () => {
       setLoading(false);
     }
   };
-
+1
   const fetchHistory = async () => {
     setHistoryLoading(true);
     setHistoryError("");
     try {
-  const res = await fetch("https://schirmer-s-notary-backend.onrender.com/client/requests", { credentials: "include" });
+    const res = await fetch("https://schirmer-s-notary-backend.onrender.com/client/requests", { credentials: "include" });
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
       setHistory(data.requests || []);
@@ -220,13 +211,13 @@ const RequestPage: React.FC = () => {
           <button type="submit" className="bg-green-700 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg font-semibold hover:bg-green-800 w-full text-sm md:text-base" disabled={loading}>
             {loading ? "Submitting..." : "Submit Request"}
           </button>
+          {success && (
+            <div className="bg-green-100 border border-green-400 text-green-800 rounded-lg px-4 py-2 mt-2 text-center font-semibold">
+              {success}
+            </div>
+          )}
           {error && <div className="text-red-600 mt-2">{error}</div>}
         </form>
-        {success && (
-          <div className="bg-green-100 border border-green-400 text-green-800 rounded-lg px-4 py-3 mt-4 text-center font-semibold">
-            {success}
-          </div>
-        )}
 
         {isLoggedIn && (
           <div className="mt-6 md:mt-10">

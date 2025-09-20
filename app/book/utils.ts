@@ -12,7 +12,7 @@ export async function submitRequest(data: {
 }) {
   try {
     console.log("[submitRequest] Sending booking request to backend", data);
-    const res = await fetch('http://schirmer-s-notary-backend.onrender.com/jobs/request', {
+    const res = await fetch('https://schirmer-s-notary-backend.onrender.com/jobs/request', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
