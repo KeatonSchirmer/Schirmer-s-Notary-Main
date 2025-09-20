@@ -141,6 +141,20 @@ const RequestPage: React.FC = () => {
 
   return (
     <div className="text-black max-w-6xl mx-auto py-10 md:py-16 px-4 md:px-6 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
+      <div className="w-full max-w-2xl mx-auto">
+        <div className="relative" style={{ paddingBottom: "150%", height: 0 }}>
+          <iframe
+            src="https://docs.google.com/forms/d/e/1FAIpQLSem9Ks8x-KQDNXYsIHpnwBdhJXYZo3I88ImgMGsi4cmDkH2zA/viewform?embedded=true"
+            title="Booking Form"
+            className="absolute top-0 left-0 w-full h-full border-none rounded-xl shadow-md"
+            style={{ minHeight: "600px", maxHeight: "100vh" }}
+            allowFullScreen
+          >
+            Loading…
+          </iframe>
+        </div>
+      </div>
+      {/*
       <div>
         <h3 className="text-lg md:text-xl font-bold mb-4">Available Appointment Times</h3>
         <div className="mb-4">
@@ -243,6 +257,7 @@ const RequestPage: React.FC = () => {
           </div>
         )}
       </div>
+      */}
       <div className="bg-gray-100 p-4 md:p-6 rounded-xl shadow-md mt-6 md:mt-0">
         <h3 className="text-lg md:text-xl font-bold mb-2 md:mb-4">Instructions</h3>
         <ul className="list-disc list-inside space-y-1 md:space-y-2 text-sm md:text-base">
