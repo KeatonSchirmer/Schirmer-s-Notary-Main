@@ -2,8 +2,8 @@ import Image from "next/image";
 
 export default function About() {
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800">
-      <section className="bg-gray-100 mt-6 md:mt-10 mb-8 md:mb-12 max-w-4xl mx-auto px-4 md:px-0">
+    <div className="min-h-screen bg-gray-100 text-gray-800">
+      <section className="bg-gray-100 pt-6 md:pt-10 mb-8 md:mb-12 max-w-4xl mx-auto px-4 md:px-0">
         <div className="p-4 md:p-8 rounded-xl shadow-md text-center">
           <h2 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6 text-center">About Schirmer&apos;s Notary</h2>
           <p className="mb-6 md:mb-8 text-sm md:text-base text-center">

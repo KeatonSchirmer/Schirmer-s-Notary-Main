@@ -204,7 +204,7 @@ const RequestPage: React.FC = () => {
                   return (
                     <button
                       key={slot}
-                      className={`bg-white border ${isSelected ? 'border-green-700 bg-green-100' : 'border-green-300'} text-green-700 px-4 py-3 rounded-lg shadow-sm w-full text-base font-semibold hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-green-400`}
+                      className={`bg-white border ${isSelected ? 'border-[#676767] bg-gray-100' : 'border-gray-300'} text-[#676767] px-4 py-3 rounded-lg shadow-sm w-full text-base font-semibold hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400`}
                       style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.07)" }}
                       onClick={() => setSelectedSlot(slot)}
                     >
@@ -233,11 +233,11 @@ const RequestPage: React.FC = () => {
             <option value="rush">Rush (0-5 hours, highest priority, extra charge)</option>
           </select>
           <textarea placeholder="Notes / Additional Information" className="w-full p-2 md:p-3 border rounded-lg text-sm md:text-base" rows={4} value={notes} onChange={e => setNotes(e.target.value)}></textarea>
-          <button type="submit" className="bg-green-700 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg font-semibold hover:bg-green-800 w-full text-sm md:text-base" disabled={loading}>
+          <button type="submit" className="bg-[#676767] text-white px-4 md:px-6 py-2 md:py-3 rounded-lg font-semibold hover:bg-[#575757] w-full text-sm md:text-base" disabled={loading}>
             {loading ? "Submitting..." : "Submit Request"}
           </button>
           {success && (
-            <div className="bg-green-100 border border-green-400 text-green-800 rounded-lg px-4 py-2 mt-2 text-center font-semibold">
+            <div className="bg-gray-100 border border-gray-400 text-[#676767] rounded-lg px-4 py-2 mt-2 text-center font-semibold">
               {success}
             </div>
           )}

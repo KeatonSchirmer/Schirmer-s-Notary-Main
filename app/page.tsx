@@ -1,15 +1,44 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
+import { useAuth } from "./auth-context";
 
 export default function Home() {
+  const { isLoggedIn, isPremium } = useAuth();
+  
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800">
-      <section className="bg-green-700 text-white text-center py-12 md:py-20 px-4">
-        <h2 className="text-2xl md:text-4xl font-bold mb-4">Fast, Reliable, and Mobile Notary Services</h2>
-        <p className="mb-6 text-base md:text-lg">We meet you where you are—office, home, or online.</p>
-        <Link href="/request" className="bg-white text-green-700 px-4 md:px-6 py-2 md:py-3 rounded-lg font-semibold hover:bg-gray-200 text-sm md:text-base">
-          Request a Service
-        </Link>
+      <section className="bg-[#676767] text-white text-center py-12 md:py-20 px-4">
+        {isLoggedIn ? (
+          <>
+            <h2 className="text-2xl md:text-4xl font-bold mb-4">Welcome Back!</h2>
+            <p className="mb-6 text-base md:text-lg">
+              {isPremium ? "Premium Member - Enjoy priority booking and exclusive features." : "Ready to book your next notary appointment?"}
+            </p>
+            <div className="space-x-4">
+              <Link href="/book" className="bg-white text-[#676767] px-4 md:px-6 py-2 md:py-3 rounded-lg font-semibold hover:bg-gray-200 text-sm md:text-base">
+                Book Appointment
+              </Link>
+              <Link href="/dashboard" className="bg-transparent border-2 border-white text-white px-4 md:px-6 py-2 md:py-3 rounded-lg font-semibold hover:bg-white hover:text-[#676767] text-sm md:text-base">
+                View Dashboard
+              </Link>
+            </div>
+          </>
+        ) : (
+          <>
+            <h2 className="text-2xl md:text-4xl font-bold mb-4">Fast, Reliable, and Mobile Notary Services</h2>
+            <p className="mb-6 text-base md:text-lg">We meet you where you are—office, home, or online.</p>
+            <div className="space-x-4">
+              <Link href="/book" className="bg-white text-[#676767] px-4 md:px-6 py-2 md:py-3 rounded-lg font-semibold hover:bg-gray-200 text-sm md:text-base">
+                Book an Appointment
+              </Link>
+              <Link href="/login" className="bg-transparent border-2 border-white text-white px-4 md:px-6 py-2 md:py-3 rounded-lg font-semibold hover:bg-white hover:text-[#676767] text-sm md:text-base">
+                Login
+              </Link>
+            </div>
+          </>
+        )}
       </section>
 
       <section className="max-w-7xl mx-auto py-10 md:py-16 px-4 md:px-6">
@@ -29,7 +58,7 @@ export default function Home() {
           </div>
         </div>
         <div className="text-center mt-6 md:mt-8">
-          <Link href="/services" className="text-green-700 font-semibold hover:underline text-sm md:text-base">View All Services →</Link>
+          <Link href="/services" className="text-[#676767] font-semibold hover:underline text-sm md:text-base">View All Services →</Link>
         </div>
       </section>
 
@@ -48,18 +77,35 @@ export default function Home() {
               <p className="text-gray-600 text-sm md:text-base">CEO & Notary</p>
             </div>
           </div>
-          <Link href="/about" className="bg-green-700 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg font-semibold hover:bg-green-800 mt-6 md:mt-8 inline-block text-sm md:text-base">
+          <Link href="/about" className="bg-[#676767] text-white px-4 md:px-6 py-2 md:py-3 rounded-lg font-semibold hover:bg-[#575757] mt-6 md:mt-8 inline-block text-sm md:text-base">
             Learn More
           </Link>
         </div>
       </section>
 
-      <section className="bg-green-700 text-white text-center py-10 md:py-16 px-4">
-        <h3 className="text-2xl md:text-3xl font-bold mb-4">Need a Notary Today?</h3>
-        <p className="mb-6 text-sm md:text-base">Submit a request now and we&apos;ll get back to you promptly.</p>
-        <Link href="/request" className="bg-white text-green-700 px-4 md:px-6 py-2 md:py-3 rounded-lg font-semibold hover:bg-gray-200 text-sm md:text-base">
-          Request a Service
-        </Link>
+      <section className="bg-[#676767] text-white text-center py-10 md:py-16 px-4">
+        {isLoggedIn ? (
+          <>
+            <h3 className="text-2xl md:text-3xl font-bold mb-4">Quick Actions</h3>
+            <p className="mb-6 text-sm md:text-base">Manage your appointments and account settings.</p>
+            <div className="space-x-4">
+              <Link href="/book" className="bg-white text-[#676767] px-4 md:px-6 py-2 md:py-3 rounded-lg font-semibold hover:bg-gray-200 text-sm md:text-base">
+                New Appointment
+              </Link>
+              <Link href="/dashboard" className="bg-transparent border-2 border-white text-white px-4 md:px-6 py-2 md:py-3 rounded-lg font-semibold hover:bg-white hover:text-[#676767] text-sm md:text-base">
+                My Bookings
+              </Link>
+            </div>
+          </>
+        ) : (
+          <>
+            <h3 className="text-2xl md:text-3xl font-bold mb-4">Need a Notary Today?</h3>
+            <p className="mb-6 text-sm md:text-base">Book an appointment now and we&apos;ll get back to you promptly.</p>
+            <Link href="/book" className="bg-white text-[#676767] px-4 md:px-6 py-2 md:py-3 rounded-lg font-semibold hover:bg-gray-200 text-sm md:text-base">
+              Book an Appointment
+            </Link>
+          </>
+        )}
       </section>
     </div>
   );
