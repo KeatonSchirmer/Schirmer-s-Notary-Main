@@ -8,10 +8,7 @@ export default function AccountPage() {
   const router = useRouter();
   const { isLoggedIn, userId, logout } = useAuth();
   const [notifications, setNotifications] = useState(false);
-  const [showEmailModal, setShowEmailModal] = useState(false);
-  const [newEmail, setNewEmail] = useState("");
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [newPassword, setNewPassword] = useState("");
+  // Removed unused modal states for future implementation
   const [show2FAModal, setShow2FAModal] = useState(false);
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [show2FAEmailSent, setShow2FAEmailSent] = useState(false);
@@ -46,13 +43,7 @@ export default function AccountPage() {
     cvv: "",
   });
 
-  const maskCardNumber = (cardNumber: string): string => {
-    const cleaned = cardNumber.replace(/\s/g, '');
-    if (cleaned.length < 4) return cleaned;
-    const lastFour = cleaned.slice(-4);
-    const masked = '*'.repeat(cleaned.length - 4) + lastFour;
-    return masked.replace(/(.{4})/g, '$1 ').trim();
-  };
+  // Removed unused maskCardNumber function - functionality handled elsewhere
 
   const getCardType = (cardNumber: string): string => {
     const cleaned = cardNumber.replace(/\s/g, '');
@@ -104,8 +95,8 @@ export default function AccountPage() {
           setAccountInfo(info);
           setEditAccount(info);
         }
-      } catch (error) {
-        console.error("Failed to fetch account info:", error);
+      } catch {
+        console.error("Failed to fetch account info");
       }
     }
     
@@ -127,7 +118,7 @@ export default function AccountPage() {
           const res = await response.json();
           setTwoFactorEnabled(res.twofa_verified === true);
         }
-      } catch (error) {
+      } catch {
         setTwoFactorEnabled(false);
       }
     }
@@ -156,8 +147,8 @@ export default function AccountPage() {
             card_type: res.card_number ? getCardType(res.card_number) : "",
           });
         }
-      } catch (error) {
-        console.error("Failed to fetch billing info:", error);
+      } catch {
+        console.error("Failed to fetch billing info");
       }
     }
     
@@ -194,7 +185,7 @@ export default function AccountPage() {
       } else {
         throw new Error("Failed to update account");
       }
-    } catch (error) {
+    } catch {
       alert("Failed to update account info.");
     }
   };
@@ -213,7 +204,7 @@ export default function AccountPage() {
       } else {
         throw new Error("Failed to send email");
       }
-    } catch (error) {
+    } catch {
       alert("Failed to send confirmation email.");
     }
   };
@@ -239,7 +230,7 @@ export default function AccountPage() {
       } else {
         throw new Error("Invalid code");
       }
-    } catch (error) {
+    } catch {
       alert("Invalid or expired code.");
     }
   };

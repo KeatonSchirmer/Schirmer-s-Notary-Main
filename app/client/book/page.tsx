@@ -32,7 +32,6 @@ export default function ClientBook() {
     notes?: string;
   }>>([]);
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
-  const bookedSlots: string[] = []; // Remove unused state
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [bookingLoading, setBookingLoading] = useState(false);
@@ -53,8 +52,6 @@ export default function ClientBook() {
     location: ""
   });
 
-  const weeks = generateCalendar(currentDate);
-
   // Handle authentication redirect
   useEffect(() => {
     if (!isLoggedIn) {
@@ -62,9 +59,17 @@ export default function ClientBook() {
     }
   }, [isLoggedIn, router]);
 
-  if (!isLoggedIn) {
-    return null;
-  }
+  useEffect(() => {
+    fetchEventsForMonth(currentDate.getFullYear(), currentDate.getMonth());
+    checkAvailabilityStatus();
+  }, [currentDate]);
+
+  useEffect(() => {
+    if (selectedDate) {
+      const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate).padStart(2, '0')}`;
+      fetchAvailableSlots(dateStr);
+    }
+  }, [selectedDate, currentDate]);
 
   function generateCalendar(date: Date) {
     const year = date.getFullYear();
@@ -88,6 +93,12 @@ export default function ClientBook() {
     }
     return weeks;
   }
+
+  if (!isLoggedIn) {
+    return null;
+  }
+
+  const weeks = generateCalendar(currentDate);
 
   async function checkAvailabilityStatus() {
     try {
@@ -182,8 +193,8 @@ export default function ClientBook() {
         if (response.ok) {
           const jobsRes = await response.json();
           booked = (jobsRes.jobs || jobsRes || [])
-            .filter((job: any) => job.status === 'pending' || job.status === 'accepted')
-            .map((job: any) => {
+            .filter((job: {status: string}) => job.status === 'pending' || job.status === 'accepted')
+            .map((job: {date: string; time: string; status: string}) => {
               const jobDate = job.date;
               const jobTime = job.time;
               if (jobDate && jobTime) {
@@ -206,7 +217,7 @@ export default function ClientBook() {
       const isToday = date === now.toISOString().split('T')[0];
       
       const filtered = allSlots
-        .filter((slot: any) => {
+        .filter((slot: {available?: boolean; date?: string; time: string; datetime?: string}) => {
           if (slot.available === false) return false;
           
           const slotDate = slot.date || date;
@@ -228,7 +239,7 @@ export default function ClientBook() {
           
           return true;
         })
-        .map((slot: any) => `${slot.date || date}T${slot.time || slot.datetime?.split('T')[1]}`);
+        .map((slot: {date?: string; time?: string; datetime?: string}) => `${slot.date || date}T${slot.time || slot.datetime?.split('T')[1]}`);
       
       setAvailableSlots(filtered);
     } catch (error) {
@@ -355,24 +366,12 @@ export default function ClientBook() {
     }
   }
 
-  useEffect(() => {
-    fetchEventsForMonth(currentDate.getFullYear(), currentDate.getMonth());
-    checkAvailabilityStatus();
-  }, [currentDate]);
-
-  useEffect(() => {
-    if (selectedDate) {
-      const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate).padStart(2, '0')}`;
-      fetchAvailableSlots(dateStr);
-    }
-  }, [selectedDate, currentDate]);
-
   function getEventsForSelectedDate() {
     if (!selectedDate) return [];
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
 
-    return events.filter((event: any) => {
+    return events.filter((event: {date?: string; start_date?: string}) => {
       const rawDate = event.date || event.start_date;
       if (!rawDate) return false;
 
@@ -450,9 +449,9 @@ export default function ClientBook() {
           </div>
 
           {/* Calendar Days */}
-          {weeks.map((week, i) => (
+          {weeks.map((week: (number | null)[], i: number) => (
             <div key={i} className="grid grid-cols-7 gap-2 mb-2">
-              {week.map((day, j) => (
+              {week.map((day: number | null, j: number) => (
                 <button
                   key={j}
                   disabled={!day}
@@ -535,7 +534,7 @@ export default function ClientBook() {
                 ) : (
                   <div>
                     <p className="text-sm text-gray-500 mb-2">
-                      Availability is based on the notary's configured business hours and existing bookings.
+                      Availability is based on the notary&apos;s configured business hours and existing bookings.
                     </p>
                     {availabilityStatus && availabilityStatus.configured && (
                       <p className="text-xs text-gray-500 mb-4">
