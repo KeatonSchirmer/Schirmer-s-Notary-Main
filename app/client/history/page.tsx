@@ -8,10 +8,30 @@ export default function HistoryScreen() {
   const router = useRouter();
   const { isLoggedIn, userId } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
-  const [bookings, setBookings] = useState<any[]>([]);
+  const [bookings, setBookings] = useState<Array<{
+    id: number;
+    service?: string;
+    status?: string;
+    date?: string;
+    time?: string;
+    location?: string;
+    notes?: string;
+    client_rating?: number;
+    client_feedback?: string;
+  }>>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [selectedBooking, setSelectedBooking] = useState<any>(null);
+  const [selectedBooking, setSelectedBooking] = useState<{
+    id: number;
+    service?: string;
+    status?: string;
+    date?: string;
+    time?: string;
+    location?: string;
+    notes?: string;
+    client_rating?: number;
+    client_feedback?: string;
+  } | null>(null);
   const [feedbackModal, setFeedbackModal] = useState(false);
   const [rating, setRating] = useState(0);
   const [feedback, setFeedback] = useState("");
@@ -30,7 +50,7 @@ export default function HistoryScreen() {
         if (response.ok) {
           const data = await response.json();
           // Filter bookings to only show completed ones for this client
-          const userBookings = Array.isArray(data) ? data.filter((booking: any) => 
+          const userBookings = Array.isArray(data) ? data.filter((booking: {client_id: number; status: string}) => 
             booking.client_id === userId && booking.status?.toLowerCase() === 'completed'
           ) : [];
           setBookings(userBookings);
@@ -76,7 +96,13 @@ export default function HistoryScreen() {
     }
   };
 
-  const openFeedbackModal = (booking: any) => {
+  const openFeedbackModal = (booking: {
+    id: number;
+    service?: string;
+    status?: string;
+    client_rating?: number;
+    client_feedback?: string;
+  }) => {
     setSelectedBooking(booking);
     setRating(booking.client_rating || 0);
     setFeedback(booking.client_feedback || "");
@@ -184,7 +210,7 @@ export default function HistoryScreen() {
           <div className="bg-white p-12 rounded-xl shadow-md text-center">
             <div className="text-6xl mb-4">📜</div>
             <h2 className="text-xl font-semibold text-gray-800 mb-4">No Completed Services</h2>
-            <p className="text-gray-600 mb-6">You don't have any completed services yet.</p>
+            <p className="text-gray-600 mb-6">You don&apos;t have any completed services yet.</p>
             <a 
               href="/client/book" 
               className="inline-block bg-[#676767] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#575757] transition-colors"
@@ -194,7 +220,17 @@ export default function HistoryScreen() {
           </div>
         ) : (
           <div className="space-y-4">
-            {bookings.map((booking: any) => (
+            {bookings.map((booking: {
+              id: number;
+              service?: string;
+              status?: string;
+              date?: string;
+              time?: string;
+              location?: string;
+              notes?: string;
+              client_rating?: number;
+              client_feedback?: string;
+            }) => (
               <div
                 key={booking.id}
                 className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow overflow-hidden"
@@ -207,7 +243,7 @@ export default function HistoryScreen() {
                         {booking.service || "Service Request"}
                       </h3>
                       <span className="text-green-600 font-semibold text-sm">
-                        {getStatusText(booking.status)}
+                        {getStatusText(booking.status || '')}
                       </span>
                     </div>
                     <div className="text-right">
@@ -269,7 +305,7 @@ export default function HistoryScreen() {
                       {renderStars(booking.client_rating)}
                       {booking.client_feedback && (
                         <p className="text-gray-700 text-sm mt-2 italic">
-                          "{booking.client_feedback}"
+                          &quot;{booking.client_feedback}&quot;
                         </p>
                       )}
                     </div>

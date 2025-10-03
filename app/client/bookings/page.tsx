@@ -9,7 +9,17 @@ export default function ClientBookingsScreen() {
   const router = useRouter();
   const { isLoggedIn, userId } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
-  const [bookings, setBookings] = useState<any[]>([]);
+  const [bookings, setBookings] = useState<Array<{
+    id: number;
+    service?: string;
+    status?: string;
+    date?: string;
+    time?: string;
+    location?: string;
+    urgency?: string;
+    notes?: string;
+    created_at?: string;
+  }>>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -27,7 +37,7 @@ export default function ClientBookingsScreen() {
         if (response.ok) {
           const data = await response.json();
           const jobsArray = data.jobs || data;
-          const userBookings = Array.isArray(jobsArray) ? jobsArray.filter((booking: any) => booking.client_id === userId) : [];
+                    const userBookings = Array.isArray(data) ? data.filter((booking: {client_id: number}) => booking.client_id === userId) : [];
           setBookings(userBookings);
         } else {
           throw new Error("Failed to fetch bookings");
@@ -157,7 +167,7 @@ export default function ClientBookingsScreen() {
           <div className="bg-white p-12 rounded-xl shadow-md text-center">
             <div className="text-6xl mb-4">📋</div>
             <h2 className="text-xl font-semibold text-gray-800 mb-4">No Booking Requests</h2>
-            <p className="text-gray-600 mb-6">You haven't made any booking requests yet.</p>
+            <p className="text-gray-600 mb-6">You haven&apos;t made any booking requests yet.</p>
             <Link 
               href="/client/book" 
               className="inline-block bg-[#676767] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#575757] transition-colors"
@@ -167,12 +177,22 @@ export default function ClientBookingsScreen() {
           </div>
         ) : (
           <div className="space-y-4">
-            {bookings.map((booking: any) => (
+            {bookings.map((booking: {
+              id: number;
+              service?: string;
+              status?: string;
+              date?: string;
+              time?: string;
+              location?: string;
+              urgency?: string;
+              notes?: string;
+              created_at?: string;
+            }) => (
               <div
                 key={booking.id}
                 className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow cursor-pointer overflow-hidden"
               >
-                <div className={`h-1 ${getStatusBgColor(booking.status)}`} style={{ backgroundColor: getStatusColor(booking.status) }}></div>
+                <div className={`h-1 ${getStatusBgColor(booking.status || '')}`} style={{ backgroundColor: getStatusColor(booking.status || '') }}></div>
                 <div className="p-6">
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex-1">
@@ -182,9 +202,9 @@ export default function ClientBookingsScreen() {
                       <div className="flex items-center">
                         <span
                           className="px-3 py-1 rounded-full text-xs font-semibold uppercase text-white"
-                          style={{ backgroundColor: getStatusColor(booking.status) }}
+                          style={{ backgroundColor: getStatusColor(booking.status || '') }}
                         >
-                          {getStatusText(booking.status)}
+                          {getStatusText(booking.status || '')}
                         </span>
                       </div>
                     </div>

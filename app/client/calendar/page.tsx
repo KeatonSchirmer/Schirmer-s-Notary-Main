@@ -109,7 +109,7 @@ export default function ClientCalendar() {
         ) : appointments.length === 0 ? (
           <div className="bg-white p-12 rounded-xl shadow-md text-center">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">No Appointments Scheduled</h2>
-            <p className="text-gray-600 mb-6">You don't have any appointments scheduled yet.</p>
+            <p className="text-gray-600 mb-6">You don&apos;t have any appointments scheduled yet.</p>
             <a 
               href="/client/book" 
               className="inline-block bg-[#676767] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#575757] transition-colors"

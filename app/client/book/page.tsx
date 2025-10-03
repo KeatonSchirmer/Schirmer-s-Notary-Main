@@ -22,13 +22,25 @@ export default function ClientBook() {
   
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<number | null>(null);
-  const [events, setEvents] = useState<any[]>([]);
+  const [events, setEvents] = useState<Array<{
+    date: string;
+    title?: string;
+    name?: string;
+    start_date?: string;
+    time?: string;
+    location?: string;
+    notes?: string;
+  }>>([]);
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
-  const [bookedSlots, setBookedSlots] = useState<string[]>([]);
+  const bookedSlots: string[] = []; // Remove unused state
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [bookingLoading, setBookingLoading] = useState(false);
-  const [availabilityStatus, setAvailabilityStatus] = useState<any>(null);
+  const [availabilityStatus, setAvailabilityStatus] = useState<{
+    configured?: boolean;
+    office_start?: string;
+    office_end?: string;
+  } | null>(null);
   const [message, setMessage] = useState("");
   
   const [bookingForm, setBookingForm] = useState<BookingForm>({
@@ -41,12 +53,18 @@ export default function ClientBook() {
     location: ""
   });
 
+  const weeks = generateCalendar(currentDate);
+
+  // Handle authentication redirect
+  useEffect(() => {
+    if (!isLoggedIn) {
+      router.push('/login');
+    }
+  }, [isLoggedIn, router]);
+
   if (!isLoggedIn) {
-    router.push('/login');
     return null;
   }
-
-  const weeks = generateCalendar(currentDate);
 
   function generateCalendar(date: Date) {
     const year = date.getFullYear();
@@ -182,7 +200,7 @@ export default function ClientBook() {
         booked = [];
       }
       
-      setBookedSlots(booked);
+      // booked slots are handled in filtering below
       
       const now = new Date();
       const isToday = date === now.toISOString().split('T')[0];
@@ -216,7 +234,6 @@ export default function ClientBook() {
     } catch (error) {
       console.error('Error fetching available slots:', error);
       setAvailableSlots([]);
-      setBookedSlots([]);
     }
   }
 

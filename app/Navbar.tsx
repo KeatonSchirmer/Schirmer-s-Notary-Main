@@ -1,16 +1,17 @@
 "use client";
 import React, { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useAuth } from "./auth-context";
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const { isLoggedIn, isPremium, logout } = useAuth();
+  const { isLoggedIn, logout } = useAuth();
 
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto flex items-center px-4 md:px-6 py-4">
-      <img src="/NBlogo.png" alt="Schirmer's Notary Logo" width={100} height={100} className="overflow-hidden"/>
+      <Image src="/NBlogo.png" alt="Schirmer's Notary Logo" width={100} height={100} className="overflow-hidden"/>
       <h1 className="text-xl md:text-4xl font-serif font-bold text-black">Schirmer&apos;s Notary</h1>
         <button
           className="md:hidden p-2 rounded focus:outline-none focus:ring-2 focus:ring-[#676767]"
