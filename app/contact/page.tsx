@@ -39,7 +39,7 @@ export default function Contact() {
             <div className="bg-gray-100 p-4 md:p-6 rounded-xl shadow-md">
                 <h2 className="text-xl md:text-2xl font-bold mb-2 md:mb-4">Contact Information</h2>
                 <p className="text-sm md:text-base">Email: <a href="mailto:schirmer.nikolas@gmail.com" className="text-[#676767]">schirmer.nikolas@gmail.com</a></p>
-                <p className="text-sm md:text-base">Phone: <a href="tel:+18503918706" className="text-[#676767]">(850) 391-8706</a></p>
+                <p className="text-sm md:text-base">Phone: <a href="tel:+18503918706" className="text-[#676767]">(850) 704-6786</a></p>
                 <p className="text-sm md:text-base">Office Hours: Mon - Fri, 9am - 6pm</p>
                 <p className="text-sm md:text-base">Service Area: Bay County, Gulf County, Walton County, Washington County, Calhoun County</p>
             </div>
