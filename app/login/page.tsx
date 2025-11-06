@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 
 export default function LoginPage() {
   return (
@@ -14,7 +15,7 @@ export default function LoginPage() {
           >
             Refresh
           </button>
-          <a href="/" className="inline-flex items-center justify-center px-4 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 hover:bg-gray-50">Home</a>
+          <Link href="/" className="inline-flex items-center justify-center px-4 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 hover:bg-gray-50">Home</Link>
         </div>
       </div>
     </div>
