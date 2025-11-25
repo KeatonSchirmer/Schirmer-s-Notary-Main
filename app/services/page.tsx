@@ -4,13 +4,13 @@ import { useAuth } from "../auth-context";
 export default function Services() {
     const { isPremium } = useAuth();
 
-    const mobileBase = 10;
+    const mobileBase = 30;
     const mobileTravel = 20;
     const mobileAddon = 10;
     const loanBase = 150;
     const loanTravel = 25;
     const loanRush = 25;
-    const onlineBase = 30;
+    const onlineBase = 40;
     const onlineAddon = 15;
     const onlineUrgent = 15;
     const onlineRush = 25;
