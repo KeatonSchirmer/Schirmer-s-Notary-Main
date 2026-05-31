@@ -43,11 +43,11 @@ export default function Navbar() {
             </>
           ) : (
             <>
-              <Link href="/" className="hover:text-[#676767]">Home</Link>
-              <Link href="/services" className="hover:text-[#676767]">Services</Link>
-              <Link href="/about" className="hover:text-[#676767]">About</Link>
-              <Link href="/book" className="hover:text-[#676767]">Book</Link>
-              <Link href="/contact" className="hover:text-[#676767]">Contact</Link>
+              <Link href="/" className="hover:text-[#676767] text-black">Home</Link>
+              <Link href="/services" className="hover:text-[#676767] text-black">Services</Link>
+              <Link href="/about" className="hover:text-[#676767] text-black">About</Link>
+              <Link href="/book" className="hover:text-[#676767] text-black">Book</Link>
+              <Link href="/contact" className="hover:text-[#676767] text-black">Contact</Link>
               <Link href="/login" className="px-3 py-1 rounded-lg bg-[#676767] text-white hover:bg-[#575757]">Login</Link>
             </>
           )}

@@ -1,0 +1,2783 @@
+openapi: 3.0.0
+info:
+  description: |
+    # About
+
+    Our mission is to create convenience for our customers through
+    the fastest online notary service, available anytime.
+    We want to improve the notarization process by streamlining it,
+    making it affordable, and accessible to everyone.
+
+
+    <br>
+    <a href="https://onenotary.us/onenotary-business-online-demo"><img src="https://one-notary-prod-public.s3.amazonaws.com/NeedWL.png" alt="OneNotary Business Demo" /></a>
+
+    # General flow
+
+    <img src="https://one-notary-prod-public.s3.amazonaws.com/ONT_Generic.png" />
+
+
+    # Getting Started
+
+    ## Create a Business Account
+
+    1. Sign Up to Business Account [Business Sign Up page](https://app.onenotary.us/business/signup/).
+
+    2. Contact support@onenotary.us for initial setup
+
+    # Incoming Webhooks
+
+    OneNotary uses webhooks to notify your application when events happen in your account. Webhooks are especially useful for asynchronous events like session status changes, notary assignments, or technical issues during a live session.
+
+    ## Webhooks vs. Session Statuses
+
+    It is crucial to distinguish between **Webhook Event Types** and **Session Statuses**:
+
+    *   **Webhook Event Types**: These are the triggers you subscribe to (e.g., `session.status.updated` or `session.status.updated_completed_successfully`). They define *when* a callback is sent to your server.
+    *   **Session Statuses**: These represent the current state of a session (e.g., `created`, `ready_to_start`, `completed_successfully`). The current status is always present in the `status` field of the session object within the webhook payload.
+
+    ## Event Categories
+
+    OneNotary triggers events across several categories:
+
+    ### 1. Session Status Updates
+
+    These events are triggered when a session's primary state changes. You can subscribe to the generic `session.status.updated` event to receive all updates, or to specific events (e.g., `session.status.updated_completed_successfully`) to filter for only the states you care about.
+
+    #### Status Lifecycle Reference
+
+    Below is a list of available statuses. To subscribe to a specific status change, prefix the status name with `session.status.updated_`.
+
+     | Phase            | Status                                    | Description                                                                                                                                                                                                                |
+     | :---             | :---                                      | :---                                                                                                                                                                                                                       |
+     | **Initiation**   | created                                 | The requester (business or individual) has created a request but hasn't invited participants yet. This request may have a document uploaded, a list of participants who will be invited later, and payment method details. |
+     |                  | create_expired                          | Request expired after 30 days of inactivity.                                                                                                                                                                               |
+     |                  | invite_sent                             | The requester has initiated an invite to participants (signers and witnesses). All participants have received emails with a join link.                                                                                     |
+     |                  | invite_expired                          | Not all participants have proceeded with the invitation, and therefore the invitation has expired within 30 days.                                                                                                          |
+     |                  | invite_canceled                         | Invitation was canceled.                                                                                                                                                                                                   |
+     |                  | canceled                                | Request was canceled by backoffice or API.                                                                                                                                                                                 |
+     | **Preparation**  | draft                                   | All participants have reached at least the “Documents” page.                                                                                                                                                               |
+     |                  | draft_expired                           | All participants have reached at least the 'Documents' page and have abandoned the request for more than 30 days.                                                                                                          |
+     |                  | identity_check                          | All participants have reached at least the “Identity Check” page.                                                                                                                                                          |
+     |                  | identity_locked                         | The request is locked for 24 hours due to unsuccessful identity verification.                                                                                                                                              |
+     |                  | identity_required                       | At least one participant needs to start identity verification.                                                                                                                                                              |
+     |                  | identity_expired                        | All participants have reached at least the 'Identity Check' page and have abandoned the request for more than 30 days.                                                                                                     |
+     |                  | id_verification_started                 | All participants have reached at least the 'Photo ID Verification' page.                                                                                                                                                   |
+     |                  | payments                                | The paying agent (requestor or primary signer) has reached the payment stage.                                                                                                                                              |
+     |                  | payments_expired                        | The paying agent (requestor or primary signer) has reached the payment stage and has abandoned the request for more than 30 days.                                                                                          |
+     | **Live Session** | pending                                 | The notary session has been paused, all issues resolved and waiting for the signer to re-initiate the notary search.                                                                                                       |
+     |                  | pending_expired                         | The notary session has been paused and none has re-initiated the session recovery for more than 30 days.                                                                                                                   |
+     |                  | ready_to_start                          | All participants have performed A/V check and identity verification and are waiting for the notary to start the session.                                                                                                   |
+     |                  | ready_to_start_expired                  | The 'Ready to Start' session hasn't started within 30 days                                                                                                                                                                 |
+     |                  | session_started                         | The 'Ready to Start' session has started. The notary and all the participants have joined the session.                                                                                                                     |
+     |                  | session_expired                         | The session was abandoned for more than 30 days.                                                                                                                                                                           |
+     |                  | session_terminated                      | The session was stopped either by the notary or by any other participant. There was no way to pause the session to recover it later.                                                                                       |
+     |                  | additional_information_required         | The session is paused and waiting for input from participants.                                                                                                                                                             |
+     |                  | additional_information_required_expired | The session was paused to get input from participants. Didn’t get input within 30 days.                                                                                                                                    |
+     | **Post-Session** | processing                              | The notary has completed the session. OneNotary is processing the session documents and video.                                                                                                                             |
+     |                  | processing_document_failed              | The notary has completed the session. There is a problem with the documents.                                                                                                                                               |
+     |                  | processing_video_failed                 | The notary has completed the session. There is a problem with the video.                                                                                                                                                   |
+     |                  | processing_terminated                   | The notary has completed the session but video or document processing was not finished.                                                                                                                             |
+     |                  | completing                              | The notary has completed the session. The session documents and video are ready. OneNotary performs the payment transaction and delivers emails or documents to the recipients.                                            |
+     |                  | completed_payment_failed                | The payment for the notary session has failed. The paying agent will receive a notification about the failed transaction. The document recipient is blocked from downloading the document.                                 |
+     |                  | completed_document_delivery_failed      | The document was not delivered to the recipient.                                                                                                                                                                           |
+     |                  | completed_successfully                  | The session is completed successfully. Documents and videos are ready for download.                                                                                                                                        |
+
+
+
+    > For more details on each event, please refer to the [Subscribe to events](#operation/subscribeWebhook) operation.
+
+    ### 2. Session Property Updates
+
+    These events occur when specific attributes change, regardless of the overall session status.
+
+    | Event | Description |
+    | :--- | :--- |
+    | `session.updated_notary_assigned` | A notary has been assigned to the session. |
+    | `session.updated_notary_removed` | The assigned notary has been removed from the session. |
+    | `session.updated_signer_identity_locked` | A signer is temporarily locked (24h) due to failed identity verification. |
+    | `session.updated_signer_identity_unlocked` | A signer's identity lock has been lifted. |
+
+    ### 3. Session Pause Events
+
+    These events provide detailed context when a live session is paused.
+
+    | Initiator of Pause | Event | Reason for Pausing |
+    | :---  | :--- | :--- |
+    | `notary` | `session.updated_paused_audio_video_issue` | One or more participants are experiencing technical difficulties. |
+    | `notary` | `session.updated_paused_document_issue` | There is an issue with the session documents |
+    | `notary` | `session.updated_paused_notary_change` | Signer requires a notary from a different state or language. |
+    | `notary` | `session.updated_paused_other_reason` | The session was paused for a specified reason. |
+    | `signer` | `session.updated_paused_notary_not_on_session` | The assigned notary is not present in the session. |
+    | `signer` | `session.updated_paused_signer_exit_other_reason` | A signer couldn't or didn't want to continue the session with a provided reason |
+    | `system` | `session.updated_paused_inactive_participants` | All required participants became inactive or disconnected. |
+
+    ## Event Payload Structure
+
+    All webhook notifications follow a consistent structure. Most events return the full [Session object](#tag/session_model) in the `data` field, while specialized events (like property updates or pauses) return targeted information.
+
+    | Field | Type | Description |
+    | :--- | :--- | :--- |
+    | `type` | string | The specific event type (e.g., `session.status.updated`). |
+    | `event_created_at` | string | ISO 8601 timestamp of when the event occurred. |
+    | `data` | object | The event data. For status updates, this is the full Session object. |
+
+    ### Example Payload
+
+    ```json
+    {
+      "type": "session.status.updated_completed_successfully",
+      "event_created_at": "2024-01-12T16:30:00.000Z",
+      "data": {
+        "id": "d47766d8-5ffa-444f-bb7a-476ffbdce85d",
+        "status": "completed_successfully",
+        "external_id": "YOUR_ID",
+        "price": 25.0,
+        "created_at": "2024-01-12T16:00:00.000Z"
+      }
+    }
+    ```
+
+    ## Handling Strategies
+
+    *   **State Sync**: Subscribe to `session.status.updated` to keep your local database in sync with OneNotary.
+    *   **Automation**: Use specific events like `session.status.updated_completed_successfully` to trigger post-session workflows.
+    *   **Support**: Monitor `session.updated_paused_audio_video_issue` to proactively help users with technical problems.
+
+    ## Webhook Signatures
+
+    To ensure security, OneNotary signs every webhook request. You should verify these signatures to confirm that the request originated from OneNotary.
+
+    The `X-Onenotary-Signature` header contains a timestamp and a signature:
+    `X-Onenotary-Signature: t=1644488446795,s=89f655a6a287b6d1b104d432d3dc67afba5c7f466ac1da4748aa7ef7f701bf16`
+
+    ### Verification Steps
+
+    1.  **Extract**: Parse the header to get the timestamp `t` and signature `s`.
+    2.  **Prepare**: Concatenate the timestamp, a dot `.`, and the raw JSON request body string.
+    3.  **Sign**: Compute an HMAC SHA256 hex-encoded signature using your **API Token** as the secret key.
+    4.  **Compare**: The computed signature must match the one from the header.
+
+    #### Python Implementation
+
+    ```python
+    import hmac
+    import hashlib
+
+    def verify_signature(header, body, api_token):
+        # 1. Extract t and s
+        parts = dict(x.split('=') for x in header.split(','))
+        t, s = parts.get('t'), parts.get('s')
+        
+        # 2 & 3. Prepare and Sign
+        payload = f"{t}.{body}"
+        expected = hmac.new(api_token.encode(), payload.encode(), hashlib.sha256).hexdigest()
+        
+        # 4. Compare
+        return hmac.compare_digest(expected, s)
+    ```
+
+    # Deprecation
+
+    The following API parameter values are deprecated. They remain supported until the dates listed in the table below, after which they will be removed.
+    Please update your integrations accordingly.
+
+    `session_type` (POST /api/v2/sessions/)
+
+    | Deprecated value | Replacement | Supported until |
+    | :--- | :--- | :--- |
+    | `mobile_paper` | `travel_paper` | End of 2026 |
+    | `mobile_ipen` | `ipen` | End of 2026 |
+  version: 2.2.0
+  title: OneNotary API Documentation
+  termsOfService: https://onenotary.us/terms-of-service/
+  license:
+    name: Proprietary
+    url: https://onenotary.us/terms-of-service/
+  contact:
+    email: support@onenotary.us
+  x-logo:
+    url: https://onenotary.us/wp-content/uploads/2021/03/on-dev.svg
+    backgroundColor: '#fafafa'
+    altText: OneNotary
+servers:
+  - url: https://app.onenotary.us/api/v2
+tags:
+  - name: session_model
+    x-displayName: The Session Model
+    description: |
+      <SchemaDefinition schemaRef="#/components/schemas/SessionResponseExtended" />
+  - name: session_participant
+    x-displayName: The Participant Model
+    description: |
+      <SchemaDefinition schemaRef="#/components/schemas/ParticipantResponseExtended" />
+x-tagGroups:
+  - name: Operations
+    tags:
+      - Session
+      - Participants
+      - Notary
+      - Documents
+      - Templates
+      - Video
+      - Auth
+      - Shortcuts (Beta)
+      - Identity (Beta)
+  - name: Webhooks
+    tags:
+      - Webhook
+  - name: Models
+    tags:
+      - session_model
+      - session_participant
+paths:
+  /sessions:
+    post:
+      operationId: createSession
+      security:
+        - Token: []
+      x-codeSamples:
+        - lang: cURL
+          source: |
+            curl -X POST 'https://app.onenotary.us/api/v2/sessions' \
+            --header 'Accept: application/json' \
+            --header 'X-ONENOTARY-API-TOKEN: {Business Account Token}' \
+            --header 'Content-Type: application/json'
+      tags:
+        - Session
+      summary: Create session
+      description: Creates new notarization session. Session ID from response will be used in all next API methods.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/SessionRequest'
+                - $ref: '#/components/schemas/SessionRequestExtended'
+      responses:
+        '201':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/SessionResponse'
+                  - $ref: '#/components/schemas/SessionResponseExtended'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '405':
+          $ref: '#/components/responses/405'
+    get:
+      operationId: getSessions
+      security:
+        - Token: []
+      x-codeSamples:
+        - lang: cURL
+          source: |
+            curl -X GET 'https://app.onenotary.us/api/v2/sessions' \
+            --header 'Accept: application/json' \
+            --header 'X-ONENOTARY-API-TOKEN: {Business Account Token}' \
+            --header 'Content-Type: application/json'
+      tags:
+        - Session
+      summary: List of Sessions
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  oneOf:
+                    - $ref: '#/components/schemas/SessionResponse'
+                    - $ref: '#/components/schemas/SessionResponseExtended'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '405':
+          $ref: '#/components/responses/405'
+  /sessions/{session_id}:
+    get:
+      operationId: getSession
+      security:
+        - Token: []
+      x-codeSamples:
+        - lang: cURL
+          source: |
+            curl -X GET 'https://app.onenotary.us/api/v2/sessions/{session_id}' \
+            --header 'Accept: application/json' \
+            --header 'X-ONENOTARY-API-TOKEN: {Business Account Token}'
+            --header 'Content-Type: application/json'
+      tags:
+        - Session
+      summary: Get session info
+      parameters:
+        - $ref: '#/components/parameters/session_id'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/SessionResponse'
+                  - $ref: '#/components/schemas/SessionResponseExtended'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '405':
+          $ref: '#/components/responses/405'
+  /sessions/{session_id}/init:
+    post:
+      operationId: initSession
+      security:
+        - Token: []
+      x-codeSamples:
+        - lang: cURL
+          source: |
+            curl -X POST 'https://app.onenotary.us/api/v2/sessions{session_id}/init' \
+            --header 'Accept: application/json' \
+            --header 'X-ONENOTARY-API-TOKEN: {Business Account Token}' \
+            --header 'Content-Type: application/json'
+      tags:
+        - Session
+      summary: Init session
+      parameters:
+        - $ref: '#/components/parameters/session_id'
+      description: |
+        Depending on your business account config this API method will either:
+          - send invitation emails to all participants or
+          - send a session to notary review
+          - if you are using the embedded integration, you have the option to disable the sending of invitation emails.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                send_email:
+                  type: boolean
+                  default: true
+                  example: true
+                  description: <b>Optional</b>
+      responses:
+        '201':
+          description: Successful operation
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '405':
+          $ref: '#/components/responses/405'
+  /sessions/{session_id}/cancel:
+    post:
+      operationId: cancelSession
+      security:
+        - Token: []
+      x-codeSamples:
+        - lang: cURL
+          source: |
+            curl -X POST 'https://app.onenotary.us/api/v2/sessions{session_id}/cancel' \
+            --header 'Accept: application/json' \
+            --header 'X-ONENOTARY-API-TOKEN: {Business Account Token}' \
+            --header 'Content-Type: application/json'
+      tags:
+        - Session
+      summary: Cancel session
+      parameters:
+        - $ref: '#/components/parameters/session_id'
+      description: |+
+        Cancels the session if it hasn't started
+
+      responses:
+        '201':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/SessionResponse'
+                  - $ref: '#/components/schemas/SessionResponseExtended'
+              example:
+                id: d47766d8-5ffa-444f-bb7a-476ffbdce85d
+                status: canceled
+                created_at: '2020-07-13T16:30:00+00:00'
+                price: 25
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '405':
+          $ref: '#/components/responses/405'
+  /sessions/{session_id}/participants:
+    post:
+      operationId: addParticipant
+      security:
+        - Token: []
+      x-codeSamples:
+        - lang: cURL
+          source: |
+            curl -X POST 'https://app.onenotary.us/api/v2/sessions/{session_id}/participants' \
+            --header 'Accept: application/json' \
+            --header 'X-ONENOTARY-API-TOKEN: {Business Account Token}' \
+            --header 'Content-Type: application/json' \
+            --data-raw '{"email": "signer@onenotary.us", "role": "primary_signer"}'
+      tags:
+        - Participants
+      summary: Add Participant
+      description: First always should be added participant with role "primary_signer"
+      parameters:
+        - $ref: '#/components/parameters/session_id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/ParticipantRequest'
+                - $ref: '#/components/schemas/ParticipantRequestExtended'
+      responses:
+        '201':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ParticipantResponse'
+                  - $ref: '#/components/schemas/ParticipantResponseExtended'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '405':
+          $ref: '#/components/responses/405'
+    get:
+      operationId: getParticipants
+      security:
+        - Token: []
+      x-codeSamples:
+        - lang: cURL
+          source: |
+            curl -X GET 'https://app.onenotary.us/api/v2/sessions/{session_id}/participants' \
+            --header 'Accept: application/json' \
+            --header 'X-ONENOTARY-API-TOKEN: {Business Account Token}'
+      tags:
+        - Participants
+      summary: List of Participants
+      parameters:
+        - $ref: '#/components/parameters/session_id'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  oneOf:
+                    - $ref: '#/components/schemas/ParticipantResponse'
+                    - $ref: '#/components/schemas/ParticipantResponseExtended'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '405':
+          $ref: '#/components/responses/405'
+  /sessions/{session_id}/participants/{participant_id}:
+    get:
+      operationId: getParticipant
+      security:
+        - Token: []
+      x-codeSamples:
+        - lang: cURL
+          source: |
+            curl -X GET 'https://app.onenotary.us/api/v2/sessions/{session_id}/participants/{participant_id}' \
+            --header 'Accept: application/json' \
+            --header 'X-ONENOTARY-API-TOKEN: {Business Account Token}'
+      tags:
+        - Participants
+      summary: Get Participant Info
+      parameters:
+        - $ref: '#/components/parameters/session_id'
+        - $ref: '#/components/parameters/participant_id'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ParticipantResponse'
+                  - $ref: '#/components/schemas/ParticipantResponseExtended'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '405':
+          $ref: '#/components/responses/405'
+  /sessions/{session_id}/participants/{participant_id}/invitation:
+    get:
+      operationId: getParticipantInvitation
+      security:
+        - Token: []
+      x-codeSamples:
+        - lang: cURL
+          source: |
+            curl -X GET 'https://app.onenotary.us/api/v2/sessions/{session_id}/participants/{participant_id}/invitation' \
+            --header 'Accept: application/json' \
+            --header 'X-ONENOTARY-API-TOKEN: {Business Account Token}'
+      tags:
+        - Participants
+      summary: Participant Invitation Info
+      parameters:
+        - $ref: '#/components/parameters/session_id'
+        - $ref: '#/components/parameters/participant_id'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParticipantInvitation'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '405':
+          $ref: '#/components/responses/405'
+  /sessions/{session_id}/participants/witnesses/request:
+    post:
+      operationId: requestWitness
+      security:
+        - Token: []
+      x-codeSamples:
+        - lang: cURL
+          source: |
+            curl -X POST 'https://app.onenotary.us/api/v2/sessions/{session_id}/participants/witnesses/request' \
+            --header 'Accept: application/json' \
+            --header 'X-ONENOTARY-API-TOKEN: {Business Account Token}' \
+            --header 'Content-Type: application/json'
+      tags:
+        - Participants
+      summary: Request Witness
+      description: Request OneNotary Witness
+      parameters:
+        - $ref: '#/components/parameters/session_id'
+      requestBody:
+        required: true
+      responses:
+        '201':
+          description: Successful operation
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '405':
+          $ref: '#/components/responses/405'
+  /sessions/{session_id}/participants/witnesses:
+    get:
+      operationId: getWitnesses
+      security:
+        - Token: []
+      x-codeSamples:
+        - lang: cURL
+          source: |
+            curl -X GET 'https://app.onenotary.us/api/v2/sessions/{session_id}/participants/witnesses' \
+            --header 'Accept: application/json' \
+            --header 'X-ONENOTARY-API-TOKEN: {Business Account Token}'
+      tags:
+        - Participants
+      summary: List of Requested Witnesses
+      parameters:
+        - $ref: '#/components/parameters/session_id'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WitnessResponse'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '405':
+          $ref: '#/components/responses/405'
+  /sessions/{session_id}/notary:
+    get:
+      operationId: getNotary
+      security:
+        - Token: []
+      x-codeSamples:
+        - lang: cURL
+          source: |
+            curl -X GET 'https://app.onenotary.us/api/v2/sessions/{session_id}/notary' \
+            --header 'Accept: application/json' \
+            --header 'X-ONENOTARY-API-TOKEN: {Business Account Token}'
+      tags:
+        - Notary
+      summary: Get Notary Info
+      parameters:
+        - $ref: '#/components/parameters/session_id'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotaryResponse'
+        '204':
+          description: Notary not found for this session
+          content:
+            example: ''
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '405':
+          $ref: '#/components/responses/405'
+    post:
+      operationId: setNotary
+      security:
+        - Token: []
+      x-codeSamples:
+        - lang: cURL
+          source: |
+            curl -X POST 'https://app.onenotary.us/api/v2/sessions/{session_id}/notary' \
+            --header 'Accept: application/json' \
+            --header 'X-ONENOTARY-API-TOKEN: {Business Account Token}' \
+            --header 'Content-Type: application/json' \
+            --data-raw '{"email": "notary@onenotary.us"}'
+      tags:
+        - Notary
+      summary: Set Notary
+      description: Set notary for current session
+      parameters:
+        - $ref: '#/components/parameters/session_id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+              required:
+                - email
+      responses:
+        '201':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotaryResponse'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '405':
+          $ref: '#/components/responses/405'
+  /sessions/{session_id}/notary/extended:
+    get:
+      operationId: getNotaryExtended
+      security:
+        - Token: []
+      x-codeSamples:
+        - lang: cURL
+          source: |
+            curl -X GET 'https://app.onenotary.us/api/v2/sessions/{session_id}/notary/extended' \
+            --header 'Accept: application/json' \
+            --header 'X-ONENOTARY-API-TOKEN: {Business Account Token}'
+      tags:
+        - Notary
+      summary: Get Notary Extended Info (Partner API)
+      parameters:
+        - $ref: '#/components/parameters/session_id'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotaryResponseExtended'
+        '204':
+          description: Notary not found for this session
+          content:
+            example: ''
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '405':
+          $ref: '#/components/responses/405'
+  /sessions/{session_id}/documents:
+    post:
+      operationId: addDocument
+      security:
+        - Token: []
+      x-codeSamples:
+        - lang: cURL (json)
+          source: |
+            curl -X POST 'https://app.onenotary.us/api/v2/sessions/{session_id}/documents' \
+            --header 'Accept: application/json' \
+            --header 'X-ONENOTARY-API-TOKEN: {Business Account Token}' \
+            --header 'Content-Type: application/json' \
+            --data-raw '{ "file": { "name": "sample.pdf", "content": "JVBERi0xLjUNCiW1tbW1DQoxIDAg......" } }'
+        - lang: cURL (multipart/form-data)
+          source: |
+            curl -X POST 'https://app.onenotary.us/api/v2/sessions/{session_id}/documents' \
+            --header 'Accept: application/json' \
+            --header 'X-ONENOTARY-API-TOKEN: {Business Account Token}' \
+            --header 'Content-Type: multipart/form-data' \
+            --form 'file=@/path_to_document/sample.pdf'
+      tags:
+        - Documents
+      summary: Add Document
+      parameters:
+        - $ref: '#/components/parameters/session_id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                      example: sample.pdf
+                    content:
+                      type: string
+                      format: byte
+                      description: Base64 file content
+                      example: JVBERi0xLjUNCiW1tbW1DQoxIDAg......
+                  required:
+                    - name
+                    - content
+              required:
+                - file
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+              required:
+                - file
+      responses:
+        '201':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentResponse'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '405':
+          $ref: '#/components/responses/405'
+    get:
+      operationId: getDocuments
+      security:
+        - Token: []
+      x-codeSamples:
+        - lang: cURL
+          source: |
+            curl -X GET 'https://app.onenotary.us/api/v2/sessions/{session_id}/documents' \
+            --header 'Accept: application/json' \
+            --header 'X-ONENOTARY-API-TOKEN: {Business Account Token}'
+      tags:
+        - Documents
+      summary: List of Documents
+      parameters:
+        - $ref: '#/components/parameters/session_id'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DocumentResponse'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '405':
+          $ref: '#/components/responses/405'
+  /sessions/{session_id}/documents/{document_id}:
+    get:
+      operationId: getDocument
+      security:
+        - Token: []
+      x-codeSamples:
+        - lang: cURL
+          source: |
+            curl -X GET 'https://app.onenotary.us/api/v2/sessions/{session_id}/documents/{document_id}' \
+            --header 'Accept: application/json' \
+            --header 'X-ONENOTARY-API-TOKEN: {Business Account Token}'
+      tags:
+        - Documents
+      summary: Get Document Info
+      parameters:
+        - $ref: '#/components/parameters/session_id'
+        - $ref: '#/components/parameters/document_id'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentResponse'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '405':
+          $ref: '#/components/responses/405'
+    delete:
+      operationId: deleteDocument
+      security:
+        - Token: []
+      x-codeSamples:
+        - lang: cURL
+          source: |
+            curl -X DELETE 'https://app.onenotary.us/api/v2/sessions/{session_id}/documents/{document_id}' \
+            --header 'Accept: application/json' \
+            --header 'X-ONENOTARY-API-TOKEN: {Business Account Token}'
+      tags:
+        - Documents
+      summary: Remove Document
+      parameters:
+        - $ref: '#/components/parameters/session_id'
+        - $ref: '#/components/parameters/document_id'
+      responses:
+        '204':
+          description: Successful operation
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '405':
+          $ref: '#/components/responses/405'
+  /sessions/{session_id}/documents/{document_id}/download:
+    get:
+      operationId: downloadDocument
+      security:
+        - Token: []
+      x-codeSamples:
+        - lang: cURL
+          source: |
+            curl -X GET 'https://app.onenotary.us/api/v2/sessions/{session_id}/documents/{document_id}/download' \
+            --header 'Accept: application/json' \
+            --header 'X-ONENOTARY-API-TOKEN: {Business Account Token}'
+      tags:
+        - Documents
+      summary: Download Document
+      parameters:
+        - $ref: '#/components/parameters/session_id'
+        - $ref: '#/components/parameters/document_id'
+      responses:
+        '200':
+          description: A PDF file
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '405':
+          $ref: '#/components/responses/405'
+  /sessions/{session_id}/documents/{document_id}/stamps:
+    get:
+      operationId: getDocumentStamps
+      security:
+        - Token: []
+      x-codeSamples:
+        - lang: cURL
+          source: |
+            curl -X GET 'https://app.onenotary.us/api/v2/sessions/{session_id}/documents/{document_id}/stamps' \
+            --header 'Accept: application/json' \
+            --header 'X-ONENOTARY-API-TOKEN: {Business Account Token}'
+      tags:
+        - Documents
+      summary: List of Document Stamps
+      parameters:
+        - $ref: '#/components/parameters/session_id'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DocumentStampResponse'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '405':
+          $ref: '#/components/responses/405'
+  /sessions/{session_id}/templates:
+    post:
+      operationId: addDocumentFromTemplate
+      security:
+        - Token: []
+      x-codeSamples:
+        - lang: cURL (json)
+          source: |
+            curl -X POST 'https://app.onenotary.us/api/v2/sessions/{session_id}/templates' \
+            --header 'Accept: application/json' \
+            --header 'X-ONENOTARY-API-TOKEN: {Business Account Token}' \
+            --header 'Content-Type: application/json' \
+            --data-raw '{ "slug": "template_slug" }'
+      tags:
+        - Templates
+      summary: Add Document From Template
+      parameters:
+        - $ref: '#/components/parameters/session_id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                slug:
+                  type: string
+              required:
+                - slug
+      responses:
+        '201':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentResponse'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '405':
+          $ref: '#/components/responses/405'
+  /sessions/{session_id}/video:
+    get:
+      operationId: getVideo
+      security:
+        - Token: []
+      x-codeSamples:
+        - lang: cURL
+          source: |
+            curl -X GET 'https://app.onenotary.us/api/v2/sessions/{session_id}/video' \
+            --header 'Accept: application/json' \
+            --header 'X-ONENOTARY-API-TOKEN: {Business Account Token}'
+            --header 'Content-Type: application/json'
+      tags:
+        - Video
+      summary: Get video conference info
+      parameters:
+        - $ref: '#/components/parameters/session_id'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoResponse'
+        '204':
+          description: Video processing is in progress
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '405':
+          $ref: '#/components/responses/405'
+  /sessions/{session_id}/personal_info:
+    put:
+      operationId: putPersonalInfo
+      security:
+        - Token: []
+      x-codeSamples:
+        - lang: cURL
+          source: |
+            curl -X POST 'https://app.onenotary.us/api/v2/sessions/{session_id}/personal_info' \
+            --header 'Accept: application/json' \
+            --header 'X-ONENOTARY-API-TOKEN: {Business Account Token}' \
+            --header 'Content-Type: application/json'
+            --data-raw '{"external_id": "d47766d8-5ffa-444f-bb7a-476ffbdce85d", "full_name": "John","date_of_birth": "02/13/1987","address": {"country": "US","state": "CA","city": "SF","street": "Freemont 399","zip": "55555"}}'
+      tags:
+        - Identity (Beta)
+      summary: Add Personal Info
+      parameters:
+        - $ref: '#/components/parameters/session_id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonalInfoRequest'
+      responses:
+        '201':
+          description: Successful operation
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '405':
+          $ref: '#/components/responses/405'
+  /sessions/{session_id}/kba:
+    put:
+      operationId: putKBAInfo
+      security:
+        - Token: []
+      x-codeSamples:
+        - lang: cURL
+          source: |
+            curl -X POST 'https://app.onenotary.us/api/v2/sessions/{session_id}/kba' \
+            --header 'Accept: application/json' \
+            --header 'X-ONENOTARY-API-TOKEN: {Business Account Token}' \
+            --header 'Content-Type: application/json'
+            --data-raw '{"transaction_id": "d47766d8-5ffa-444f-bb7a-476ffbdce85d", "result": "error", "error": "incorrect_answers"}'
+      tags:
+        - Identity (Beta)
+      summary: Add KBA Info
+      parameters:
+        - $ref: '#/components/parameters/session_id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KBAInfoRequest'
+      responses:
+        '201':
+          description: Successful operation
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '405':
+          $ref: '#/components/responses/405'
+  /sessions/{session_id}/idv:
+    put:
+      operationId: putIDVInfo
+      security:
+        - Token: []
+      x-codeSamples:
+        - lang: cURL
+          source: |
+            curl -X POST 'https://app.onenotary.us/api/v2/sessions/{session_id}/idv' \
+            --header 'Accept: application/json' \
+            --header 'X-ONENOTARY-API-TOKEN: {Business Account Token}' \
+            --header 'Content-Type: application/json'
+            --data-raw '{"transaction_id": "d47766d8-5ffa-444f-bb7a-476ffbdce85d", "result": "approved","front_image": "JVBERi0xLjUNCiW1tbW1DQoxIDAg......","document_type": "passport"}'
+      tags:
+        - Identity (Beta)
+      summary: Add IDV Info
+      parameters:
+        - $ref: '#/components/parameters/session_id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IDVInfoRequest'
+      responses:
+        '201':
+          description: Successful operation
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '405':
+          $ref: '#/components/responses/405'
+  /token:
+    post:
+      operationId: obtainJWTToken
+      security:
+        - Token: []
+      tags:
+        - Auth
+      summary: Obtain JWT Token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access:
+                    type: string
+                  refresh:
+                    type: string
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '405':
+          $ref: '#/components/responses/405'
+  /subscribe:
+    post:
+      operationId: subscribeWebhook
+      tags:
+        - Webhook
+      summary: Subscribe to the events
+      description: Add subscription for events. **Contact support@onenotary.us for webhook setup**
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                callback_url:
+                  type: string
+                  format: uri
+                  description: This URL will be called by the server when the desired event will occur
+                events:
+                  type: array
+                  description: |
+                    List of event names to subscribe to.
+
+                    ### Webhook Events vs. Session Statuses
+                    It is important to distinguish between **Webhook Event Types** (which you subscribe to) and **Session Statuses** (which represent the state of a session).
+
+                    - **Webhook Event Types**: These are strings like `session.status.updated` or `session.status.updated_completed_successfully`. They define *when* a callback is sent.
+                    - **Session Statuses**: These are strings like `created`, `ready_to_start`, or `completed_successfully`. They are found in the `status` field of the session object within the webhook payload.
+
+                    ### Available Event Categories
+                    - **Session Status Updates**: 
+                      - `session.status.updated`: A generic event triggered on *any* status change.
+                      - `session.status.updated_<STATUS>`: Specific events triggered only when the session enters a particular state (e.g., `session.status.updated_completed_successfully`).
+                    - **Session Property Updates**: Triggered when specific session properties change, regardless of the overall session status.
+                      - `session.updated_notary_assigned` / `session.updated_notary_removed`
+                      - `session.updated_signer_identity_locked` / `session.updated_signer_identity_unlocked`
+                    - **Session Pause Events**: Triggered when a session is paused for specific reasons (e.g., `session.updated_paused_audio_video_issue`). These events provide detailed context in the `pause_details` field.
+                  items:
+                    oneOf:
+                      - $ref: '#/components/schemas/session-status-updated'
+                      - $ref: '#/components/schemas/session-status-updated-to-specific'
+                      - $ref: '#/components/schemas/notary-changed'
+                      - $ref: '#/components/schemas/signer-lock'
+                      - $ref: '#/components/schemas/session-pause-av-issue'
+                      - $ref: '#/components/schemas/session-pause-document-issue'
+                      - $ref: '#/components/schemas/session-pause-notary-change'
+                      - $ref: '#/components/schemas/session-pause-notary-not-on-session'
+                      - $ref: '#/components/schemas/session-pause-participants-inactivity'
+                      - $ref: '#/components/schemas/session-pause-signer-exit-other-reason'
+                      - $ref: '#/components/schemas/session-pause-other-reason'
+                      - $ref: '#/components/schemas/session-terminate-with-reason'
+              required:
+                - callback_url
+                - events
+      responses:
+        '201':
+          description: Subscription added
+      callbacks:
+        session_status_updated:
+          https://myserver.com/send/callback/here:
+            post:
+              summary: Session status was updated
+              description: A callback triggered every time session status is updated
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/SessionStatusUpdated'
+              responses:
+                '200':
+                  description: Callback successfully processed and no retries will be performed
+                4XX:
+                  description: Callback processing failed and retries will be performed
+                5XX:
+                  description: Callback processing failed and retries will be performed
+        session_status_updated_to_specific:
+          https://myserver.com/send/callback/here:
+            post:
+              summary: Session status was updated to a specific value
+              description: A callback triggered every time status is updated to a specific value
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/SessionStatusUpdatedToSpecific'
+              responses:
+                '200':
+                  description: Callback successfully processed and no retries will be performed
+                4XX:
+                  description: Callback processing failed and retries will be performed
+                5XX:
+                  description: Callback processing failed and retries will be performed
+        notary_changed:
+          https://myserver.com/send/callback/here:
+            post:
+              summary: Notary changed for the session
+              description: A callback triggered every time a notary is either assigned to or removed from a session
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/NotaryChanged'
+              responses:
+                '200':
+                  description: Callback successfully processed and no retries will be performed
+                4XX:
+                  description: Callback processing failed and retries will be performed
+                5XX:
+                  description: Callback processing failed and retries will be performed
+        signer_lock_changed:
+          https://myserver.com/send/callback/here:
+            post:
+              summary: Signer locked/unlocked for the session
+              description: A callback triggered every time signer is locked/unlocked by Identity Verification
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/SignerLockedUnlocked'
+              responses:
+                '200':
+                  description: Callback successfully processed and no retries will be performed
+                4XX:
+                  description: Callback processing failed and retries will be performed
+                5XX:
+                  description: Callback processing failed and retries will be performed
+        session_pause_av_issue:
+          https://myserver.com/send/callback/here:
+            post:
+              summary: Session paused with audio-video issue
+              description: A callback triggered every time session paused with audio-video issue
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/SessionPauseAVIssue'
+              responses:
+                '200':
+                  description: Callback successfully processed and no retries will be performed
+                4XX:
+                  description: Callback processing failed and retries will be performed
+                5XX:
+                  description: Callback processing failed and retries will be performed
+        session_pause_notary_change:
+          https://myserver.com/send/callback/here:
+            post:
+              summary: Session paused to change a notary
+              description: A callback triggered every time session paused to change a notary
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/SessionPauseNotaryChange'
+              responses:
+                '200':
+                  description: Callback successfully processed and no retries will be performed
+                4XX:
+                  description: Callback processing failed and retries will be performed
+                5XX:
+                  description: Callback processing failed and retries will be performed
+        session_pause_document_issue:
+          https://myserver.com/send/callback/here:
+            post:
+              summary: Session paused with document issue
+              description: A callback triggered every time session paused with document issue
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/SessionPauseDocumentIssue'
+              responses:
+                '200':
+                  description: Callback successfully processed and no retries will be performed
+                4XX:
+                  description: Callback processing failed and retries will be performed
+                5XX:
+                  description: Callback processing failed and retries will be performed
+        session_pause_notary_not_on_session:
+          https://myserver.com/send/callback/here:
+            post:
+              summary: Session paused with notary not on session issue
+              description: A callback triggered every time session paused with notary not on session issue
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/SessionPauseNotaryNotOnSession'
+              responses:
+                '200':
+                  description: Callback successfully processed and no retries will be performed
+                4XX:
+                  description: Callback processing failed and retries will be performed
+                5XX:
+                  description: Callback processing failed and retries will be performed
+        session_pause_signer_exit_other_reason:
+          https://myserver.com/send/callback/here:
+            post:
+              summary: Session paused with signer exit by some reason
+              description: A callback triggered every time session paused with signer exit by some reason
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/SignerExitOtherReason'
+              responses:
+                '200':
+                  description: Callback successfully processed and no retries will be performed
+                4XX:
+                  description: Callback processing failed and retries will be performed
+                5XX:
+                  description: Callback processing failed and retries will be performed
+        session_pause_inactive_participants:
+          https://myserver.com/send/callback/here:
+            post:
+              summary: Session paused due to participants becoming inactive
+              description: A callback triggered every time session paused due to participants becoming inactive
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/SessionPauseParticipantsInactivity'
+              responses:
+                '200':
+                  description: Callback successfully processed and no retries will be performed
+                4XX:
+                  description: Callback processing failed and retries will be performed
+                5XX:
+                  description: Callback processing failed and retries will be performed
+        session_pause_other_reason:
+          https://myserver.com/send/callback/here:
+            post:
+              summary: Session paused with other reason
+              description: A callback triggered every time session paused with other reason
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/SessionPauseOtherReason'
+              responses:
+                '200':
+                  description: Callback successfully processed and no retries will be performed
+                4XX:
+                  description: Callback processing failed and retries will be performed
+                5XX:
+                  description: Callback processing failed and retries will be performed
+        session_terminated_with_reason:
+          https://myserver.com/send/callback/here:
+            post:
+              summary: Session terminated with a reason
+              description: A callback triggered every time session terminated with a reason
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/SessionTerminatedWithReason'
+              responses:
+                '200':
+                  description: Callback successfully processed and no retries will be performed
+                4XX:
+                  description: Callback processing failed and retries will be performed
+                5XX:
+                  description: Callback processing failed and retries will be performed
+  /webhooks:
+    get:
+      operationId: getWebhooks
+      security:
+        - Token: []
+      x-codeSamples:
+        - lang: cURL
+          source: |
+            curl -X GET 'https://app.onenotary.us/api/v2/webhooks' \
+            --header 'Accept: application/json' \
+            --header 'X-ONENOTARY-API-TOKEN: {Business Account Token}' \
+            --header 'Content-Type: application/json'
+      tags:
+        - Webhook
+      summary: List of subscribed webhooks
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WebhookResponse'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '405':
+          $ref: '#/components/responses/405'
+  /webhooks/{webhook_id}:
+    get:
+      operationId: getWebhook
+      security:
+        - Token: []
+      x-codeSamples:
+        - lang: cURL
+          source: |
+            curl -X GET 'https://app.onenotary.us/api/v2/webhooks/{webhook_id}' \
+            --header 'Accept: application/json' \
+            --header 'X-ONENOTARY-API-TOKEN: {Business Account Token}'
+            --header 'Content-Type: application/json'
+      tags:
+        - Webhook
+      summary: Get Webhook info
+      parameters:
+        - $ref: '#/components/parameters/webhook_id'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookResponse'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '405':
+          $ref: '#/components/responses/405'
+    delete:
+      operationId: deleteWebhook
+      security:
+        - Token: []
+      x-codeSamples:
+        - lang: cURL
+          source: |
+            curl -X DELETE 'https://app.onenotary.us/api/v2/webhooks/{webhook_id}' \
+            --header 'Accept: application/json' \
+            --header 'X-ONENOTARY-API-TOKEN: {Business Account Token}'
+      tags:
+        - Webhook
+      summary: Remove Webhook
+      parameters:
+        - $ref: '#/components/parameters/webhook_id'
+      responses:
+        '204':
+          description: Successful operation
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '405':
+          $ref: '#/components/responses/405'
+  /shortcuts/all_in_one:
+    post:
+      operationId: allInOne
+      security:
+        - Token: []
+      x-codeSamples:
+        - lang: cURL
+          source: |
+            curl -X POST 'https://app.onenotary.us/api/v2/shortcuts/all_in_one' \
+            --header 'Accept: application/json' \
+            --header 'X-ONENOTARY-API-TOKEN: {Business Account Token}' \
+            --header 'Content-Type: application/json' \
+            --data-raw '{"participants": [{"email": "user@example.com","role": "primary_signer"}]}'
+      tags:
+        - Shortcuts (Beta)
+      summary: All In One
+      description: Creates and inits new notarization session.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/AllInOneRequest'
+                - $ref: '#/components/schemas/AllInOneRequestExtended'
+      responses:
+        '201':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/AllInOneResponse'
+                  - $ref: '#/components/schemas/AllInOneResponseExtended'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '405':
+          $ref: '#/components/responses/405'
+  /notary:
+    put:
+      operationId: updateNotary
+      security:
+        - Token: []
+      x-codeSamples:
+        - lang: cURL
+          source: |
+            curl -X POST 'https://app.onenotary.us/api/v2/notary' \
+            --header 'Accept: application/json' \
+            --header 'X-ONENOTARY-API-TOKEN: {Business Account Token}' \
+            --header 'Content-Type: application/json' \
+            --data-raw '{"email": "notary@onenotary.us", "external_id": "5fb80251-ce49-4786-91a8-9aa6a801fd2d"}'
+      tags:
+        - Notary
+      summary: Onboard Notary (Partner API)
+      description: Update Notary by providing external partner id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                external_id:
+                  type: string
+              required:
+                - email
+                - external_id
+      responses:
+        '200':
+          description: Successful operation
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '405':
+          $ref: '#/components/responses/405'
+components:
+  securitySchemes:
+    Token:
+      type: apiKey
+      in: header
+      name: X-ONENOTARY-API-TOKEN
+  schemas:
+    id:
+      type: string
+      format: uuid
+      example: d47766d8-5ffa-444f-bb7a-476ffbdce85d
+    external_id:
+      type: string
+      description: <b>Optional</b> External Id. Used for integration.
+    SessionResponseBase:
+      type: object
+      description: Session
+      properties:
+        id:
+          $ref: '#/components/schemas/id'
+        external_id:
+          $ref: '#/components/schemas/external_id'
+    status:
+      type: string
+      enum:
+        - created
+        - create_expired
+        - invite_sent
+        - invite_expired
+        - invite_canceled
+        - canceled
+        - draft
+        - draft_expired
+        - identity_check
+        - identity_locked
+        - identity_required
+        - identity_expired
+        - id_verification_started
+        - payments
+        - payments_expired
+        - pending
+        - pending_expired
+        - ready_to_start
+        - ready_to_start_expired
+        - session_started
+        - session_expired
+        - session_terminated
+        - additional_information_required
+        - additional_information_required_expired
+        - processing
+        - processing_document_failed
+        - processing_video_failed
+        - processing_terminated
+        - completing
+        - completed_payment_failed
+        - completed_document_delivery_failed
+        - completed_successfully
+    created_at:
+      type: string
+      format: date-time
+      description: The UTC datetime (ISO 8601) for when current session was initialized
+      example: '2020-07-13T16:30:00+00:00'
+    price:
+      type: number
+      format: double
+      example: 0
+      description: Current session total payment ($)
+    SessionResponse:
+      allOf:
+        - $ref: '#/components/schemas/SessionResponseBase'
+        - type: object
+          properties:
+            status:
+              $ref: '#/components/schemas/status'
+            created_at:
+              $ref: '#/components/schemas/created_at'
+            price:
+              $ref: '#/components/schemas/price'
+    schedule_at:
+      type: string
+      format: date-time
+      description: <b>Optional</b> The UTC datetime (ISO 8601) for when current session is scheduled
+      example: '2020-07-13T16:30:00+00:00'
+    business_scenario:
+      type: string
+      enum:
+        - i9
+        - ps1583
+      description: <b>Optional</b> Custom business flow
+      example: i9
+    session_type:
+      type: string
+      enum:
+        - ron
+        - travel_paper
+        - ipen
+      description: |
+        <b>Optional</b> Notarization type.<code>ron</code> — remote online notarization.<code>travel_paper</code> — in-person notarization on paper.<code>ipen</code> — in-person electronic notarization.<br> <b>Deprecated:</b> <code>mobile_paper</code> is still accepted for backward compatibility — please use <code>travel_paper</code> instead. <code>mobile_ipen</code> is still accepted for backward compatibility — please use <code>ipen</code> instead.
+      example: travel_paper
+      default: ron
+    Custom:
+      type: array
+      description: <b>Optional</b> Custom key-value data connected to session. Could be used for integration.
+      items:
+        type: object
+        properties:
+          key:
+            type: string
+            example: custom_example_key
+          value:
+            type: string
+            example: custom_example_value
+    SessionResponseExtended:
+      allOf:
+        - $ref: '#/components/schemas/SessionResponse'
+        - type: object
+          properties:
+            schedule_at:
+              $ref: '#/components/schemas/schedule_at'
+            business_scenario:
+              $ref: '#/components/schemas/business_scenario'
+            session_type:
+              $ref: '#/components/schemas/session_type'
+            custom:
+              $ref: '#/components/schemas/Custom'
+    error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+      required:
+        - code
+        - message
+    SessionRequest:
+      type: object
+      nullable: true
+    language:
+      type: string
+      enum:
+        - EN
+        - ES
+      description: <b>Optional</b> Language of a notarization session (please contact support if you want to use it)
+      example: EN
+    us_state:
+      type: string
+      enum:
+        - FL
+        - VA
+        - PA
+        - TX
+      description: <b>Optional</b> US state of a notarization session (please contact support if you want to use it)
+      example: VA
+    idv_pre_setup:
+      type: string
+      enum:
+        - kba
+        - biometric
+        - kba_or_biometric
+        - kba_and_biometric
+      description: <b>Optional</b> Identity Verification method(s) that will be available to the participant during the session preparation
+      example: kba
+    SessionRequestExtended:
+      type: object
+      properties:
+        external_id:
+          $ref: '#/components/schemas/external_id'
+        schedule_at:
+          $ref: '#/components/schemas/schedule_at'
+        business_scenario:
+          $ref: '#/components/schemas/business_scenario'
+        session_type:
+          $ref: '#/components/schemas/session_type'
+        language:
+          $ref: '#/components/schemas/language'
+        us_state:
+          $ref: '#/components/schemas/us_state'
+        idv_pre_setup:
+          $ref: '#/components/schemas/idv_pre_setup'
+        custom:
+          $ref: '#/components/schemas/Custom'
+    ParticipantResponseBase:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: integer
+          example: 777
+      required:
+        - id
+    Participant:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+      required:
+        - email
+    explicit_role:
+      type: string
+      enum:
+        - primary_signer
+        - signer
+        - witness
+      title: role
+      description: |
+        Session status:
+         * `primary_signer`
+         * `signer`
+         * `witness`
+    ParticipantRequest:
+      title: ParticipantRequest
+      allOf:
+        - $ref: '#/components/schemas/Participant'
+        - type: object
+          properties:
+            role:
+              $ref: '#/components/schemas/explicit_role'
+          required:
+            - email
+            - role
+    ParticipantInvitation:
+      type: object
+      properties:
+        link:
+          type: string
+          format: link
+          description: 'Note: link is available in case session is already initiated'
+          example: https://app.onenotary.us/.........
+    ParticipantResponse:
+      title: ParticipantResponse
+      allOf:
+        - $ref: '#/components/schemas/ParticipantResponseBase'
+        - $ref: '#/components/schemas/ParticipantRequest'
+        - $ref: '#/components/schemas/ParticipantInvitation'
+    address:
+      type: object
+      properties:
+        country:
+          type: string
+          format: Two-letter country code in alpha-2 format
+          example: US
+          description: By default, the country code will be interpreted as the United States (US)
+        state:
+          type: string
+          format: Two-letter abbreviation for United States and Canada
+          example: CA
+          description: For United States and Canada it is two-letter state and territory abbreviation. For other countries any relevant regional information
+        city:
+          type: string
+          example: SF
+        street:
+          type: string
+          example: Freemont 399
+        zip:
+          type: string
+          format: 5-digit or the 9-digit format for United States
+          example: '55555'
+          description: For United States it is the 5-digit or the 9-digit format. For other countries any relevant information
+    requests_Custom:
+      title: Custom
+      type: array
+      description: Custom key-value data connected to participant.<br> Predefined keys:<br> <ul> <li> <b>signer_redirection_url</b> - The URL to which the signer will be redirected after the completion of the session. </li> </ul>
+      items:
+        type: object
+        properties:
+          key:
+            type: string
+            example: custom_example_key
+          value:
+            type: string
+            example: custom_example_value
+      example:
+        - key: signer_redirection_url
+          value: https://example.com
+        - key: custom_example_key
+          value: custom_example_value
+    Extended:
+      type: object
+      properties:
+        external_id:
+          type: string
+          example: d47766d8-5ffa-444f-bb7a-476ffbdce85d
+        phone_number:
+          type: string
+          example: +1 (234) 567-89-01
+          description: 'Note: available only for primary_signer'
+        first_name:
+          type: string
+          example: John
+        last_name:
+          type: string
+          example: Doe
+        middle_name:
+          type: string
+          example: W
+        date_of_birth:
+          type: string
+          example: 02/13/1987
+          description: Format dd/mm/yyyy
+        address:
+          $ref: '#/components/schemas/address'
+          description: Used to pre-populate signers data.
+        custom:
+          $ref: '#/components/schemas/requests_Custom'
+    ParticipantRequestExtended:
+      title: ParticipantRequestExtended
+      allOf:
+        - $ref: '#/components/schemas/ParticipantRequest'
+        - type: object
+          properties:
+            role:
+              $ref: '#/components/schemas/explicit_role'
+          required:
+            - email
+            - role
+        - $ref: '#/components/schemas/Extended'
+    ParticipantResponseExtended:
+      title: ParticipantResponseExtended
+      allOf:
+        - $ref: '#/components/schemas/ParticipantResponseBase'
+        - $ref: '#/components/schemas/ParticipantRequestExtended'
+        - $ref: '#/components/schemas/ParticipantInvitation'
+    WitnessResponse:
+      title: WitnessResponse
+      allOf:
+        - $ref: '#/components/schemas/ParticipantResponseBase'
+    NotaryResponseBase:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: integer
+          example: 777
+        user_id:
+          type: string
+          format: uuid
+          example: 365075b6-865a-4d42-9605-6705833baf23
+          description: <b>Optional</b> Internal User Id.
+      required:
+        - id
+    NotaryResponse:
+      allOf:
+        - $ref: '#/components/schemas/NotaryResponseBase'
+        - type: object
+          properties:
+            email:
+              type: string
+              format: email
+              description: '<b>Optional</b> Note: available only if notary was set via API'
+            full_name:
+              type: string
+              example: Online Notary
+              description: '<b>Optional</b> Note: available only after session init'
+    Commission:
+      type: object
+      description: Commission info
+      properties:
+        number:
+          type: string
+          description: <b>Optional</b> Commission number
+          example: '12345'
+        state:
+          type: string
+          description: Commission state
+          example: NY
+        county:
+          type: string
+          description: <b>Optional</b> Commission county
+        expiration_date:
+          type: date
+          description: 'Commission expiration date. Format: YYYY-MM-DD'
+          example: '2023-10-20'
+    Seal:
+      type: object
+      description: Seal info
+      properties:
+        base64_content:
+          type: string
+          format: Base64
+          description: Base64 string
+    NotaryResponseExtended:
+      allOf:
+        - $ref: '#/components/schemas/NotaryResponse'
+        - type: object
+          properties:
+            phone_number:
+              type: string
+              description: International phone number
+              example: '+12124567890'
+            commission:
+              allOf:
+                - $ref: '#/components/schemas/Commission'
+            seal:
+              allOf:
+                - $ref: '#/components/schemas/Seal'
+    DocumentResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: form-ds3053.pdf
+        size:
+          type: integer
+          format: int32
+          description: The size of the Document in bytes.
+        created_at:
+          type: string
+          format: date-time
+          description: The UTC datetime (ISO 8601) for when current document was uploaded
+          example: '2020-07-13T16:30:00+00:00'
+        type:
+          type: string
+          enum:
+            - original
+            - signed
+          description: |
+            Document type:
+             * `original` - Original document
+             * `signed` - Final (signed) document
+        subtype:
+          type: string
+          enum:
+            - photo_id_document
+            - address_id_document
+          description: |
+            <b>Optional</b> Document subtype:
+             * `photo_id_document` - Primary ID with a photo
+             * `address_id_document` - Secondary ID with a home address
+    DocumentStampResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        service_type:
+          type: string
+          enum:
+            - acknowledgment
+            - jurat
+            - oath
+          description: |
+            Service type to which the stamp is applied
+        page:
+          type: integer
+          format: int32
+          example: 1
+          description: Number of the page on which the stamp is placed.
+    VideoResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: d47766d8-5ffa-444f-bb7a-476ffbdce85d
+        url:
+          type: string
+          format: link
+          example: https://....../.........
+        expires_at:
+          type: string
+          format: date-time
+          description: The UTC datetime (ISO 8601) when current video url will expire
+          example: '2020-07-13T16:30:00+00:00'
+    PersonalInfoRequest:
+      type: object
+      properties:
+        external_id:
+          type: string
+          example: d47766d8-5ffa-444f-bb7a-476ffbdce85d
+        full_name:
+          type: string
+          example: John Doe
+        date_of_birth:
+          type: string
+          example: 02/13/1987
+          description: <b>Optional</b> Format dd/mm/yyyy
+        address:
+          $ref: '#/components/schemas/address'
+      required:
+        - external_id
+        - full_name
+        - address
+    KBAInfoRequest:
+      type: object
+      properties:
+        transaction_id:
+          type: string
+          example: d47766d8-5ffa-444f-bb7a-476ffbdce85d
+        result:
+          type: string
+          enum:
+            - success
+            - error
+        error:
+          type: string
+          description: <b>Required if result == error</b>
+          enum:
+            - lack_of_data
+            - configuration_error
+            - person_not_found
+            - not_eligible_to_proceed
+            - timeout
+            - incorrect_answers
+      required:
+        - transaction_id
+        - result
+        - error
+    IDVInfoRequest:
+      type: object
+      properties:
+        transaction_id:
+          type: string
+          example: d47766d8-5ffa-444f-bb7a-476ffbdce85d
+        result:
+          type: string
+          enum:
+            - not_approved
+            - approved
+        error:
+          type: string
+          description: <b>Required if result == not_approved</b>
+          enum:
+            - blurred
+            - bad_quality
+            - missing_part_document
+            - hidden_part_document
+            - damaged_document
+            - glare
+            - missing_mandatory_datapoints
+            - missing_front
+            - missing_back
+            - cannot_be_used
+            - generic_verification_error
+            - network_error
+            - timeout_error
+            - camera_error
+            - biometric_failed
+            - secondary_document_same_as_first
+            - no_documents_submitted
+        document_type:
+          type: string
+          example: passport|drivers_licence
+        title:
+          type: string
+          example: 'DRIVING_LICENSE: REGULAR_DRIVING_LICENSE|ID_CARD: NATIONAL_ID'
+        document_number:
+          type: string
+          example: AA123456
+        front_image:
+          type: string
+          format: byte
+          description: Base64 file content. <b>Required if result == approved</b>
+          example: JVBERi0xLjUNCiW1tbW1DQoxIDAg......
+        back_image:
+          type: string
+          format: byte
+          description: Base64 file content
+          example: JVBERi0xLjUNCiW1tbW1DQoxIDAg......
+        issue_date:
+          type: string
+          example: 02/13/1987
+          description: Format dd/mm/yyyy
+        expiration_date:
+          type: string
+          example: 02/13/2028
+          description: Format dd/mm/yyyy
+        first_name:
+          type: string
+          example: John
+        last_name:
+          type: string
+          example: Doe
+        country:
+          type: string
+          example: US
+        state:
+          type: string
+          example: CA
+        city:
+          type: string
+          example: SF
+        street:
+          type: string
+          example: Freemont 399
+        zip:
+          type: string
+          example: '55555'
+        date_of_birth:
+          type: string
+          example: 02/13/1987
+          description: Format dd/mm/yyyy
+      required:
+        - transaction_id
+        - result
+        - document_type
+        - front_image
+        - error
+    session-status-updated:
+      type: string
+      title: Session Status Updated (Generic)
+      description: |
+        A generic event triggered every time the session `status` changes.
+        The payload contains the full session object with the new status.
+      enum:
+        - session.status.updated
+    session-status-updated-to-specific:
+      type: string
+      title: Session Status Updated (Specific)
+      description: |
+        An event triggered when the session `status` changes to a specific value.
+        Suffix the event name with the desired status name.
+
+        For example, subscribe to `session.status.updated_completed_successfully` to be notified only when the session is successfully completed.
+      enum:
+        - session.status.updated_created
+        - session.status.updated_create_expired
+        - session.status.updated_invite_sent
+        - session.status.updated_invite_expired
+        - session.status.updated_invite_canceled
+        - session.status.updated_canceled
+        - session.status.updated_draft
+        - session.status.updated_draft_expired
+        - session.status.updated_identity_check
+        - session.status.updated_identity_verification_failed
+        - session.status.updated_identity_locked
+        - session.status.updated_identity_required
+        - session.status.updated_identity_expired
+        - session.status.updated_id_verification_started
+        - session.status.updated_id_verification_failed
+        - session.status.updated_id_verification_link_sent
+        - session.status.updated_id_verification_images_submitted
+        - session.status.updated_payments
+        - session.status.updated_payments_expired
+        - session.status.updated_pending
+        - session.status.updated_pending_expired
+        - session.status.updated_ready_to_start
+        - session.status.updated_ready_to_start_expired
+        - session.status.updated_session_started
+        - session.status.updated_session_expired
+        - session.status.updated_session_running_expired
+        - session.status.updated_session_terminated
+        - session.status.updated_processing
+        - session.status.updated_processing_document_failed
+        - session.status.updated_processing_video_failed
+        - session.status.updated_processing_terminated
+        - session.status.updated_completing
+        - session.status.updated_completed_payment_failed
+        - session.status.updated_completed_document_delivery_failed
+        - session.status.updated_completed_successfully
+        - session.status.updated_additional_information_required
+        - session.status.updated_additional_information_required_expired
+    notary-changed:
+      type: string
+      title: Notary Assignment Updated
+      description: |
+        Triggered when a notary is either assigned to or removed from a session.
+      enum:
+        - session.updated_notary_assigned
+        - session.updated_notary_removed
+    signer-lock:
+      type: string
+      title: Signer Identity Lock Updated
+      description: |
+        Triggered when a signer's identity is locked (e.g., due to failed KBA/IDV) or a signer's identity lock has been lifted.
+      enum:
+        - session.updated_signer_identity_locked
+        - session.updated_signer_identity_unlocked
+    session-pause-av-issue:
+      type: string
+      title: Session Paused With Audio-Video Issue
+      enum:
+        - session.updated_paused_audio_video_issue
+    session-pause-document-issue:
+      type: string
+      title: Session Paused With Document Issue
+      enum:
+        - session.updated_paused_document_issue
+    session-pause-notary-change:
+      type: string
+      title: Session Paused To Change a Notary
+      enum:
+        - session.updated_paused_notary_change
+    session-pause-notary-not-on-session:
+      type: string
+      title: Session Paused With Notary Not On Session Issue
+      enum:
+        - session.updated_paused_notary_not_on_session
+    session-pause-participants-inactivity:
+      type: string
+      title: Session Paused Due to Participants Becoming Inactive
+      enum:
+        - session.updated_paused_inactive_participants
+    session-pause-signer-exit-other-reason:
+      type: string
+      title: Session Paused By Signer Exit With Some Reason
+      enum:
+        - session.updated_paused_signer_exit_other_reason
+    session-pause-other-reason:
+      type: string
+      title: Session Paused With Other Reason
+      enum:
+        - session.updated_paused_other_reason
+    session-terminate-with-reason:
+      type: string
+      title: Session Terminated
+      description: |
+        Triggered when a session is terminated. 
+        This event provides additional `termination_details` in the payload compared to the generic status update.
+      enum:
+        - session.status.updated_session_terminated
+    EventObject:
+      type: object
+      properties:
+        event_created_at:
+          type: string
+          format: date-time
+          description: The UTC datetime (ISO 8601) for when current event was occurred
+    SessionStatusUpdatedObject:
+      allOf:
+        - $ref: '#/components/schemas/EventObject'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/SessionResponse'
+    SessionStatusUpdated:
+      allOf:
+        - type: object
+          properties:
+            type:
+              $ref: '#/components/schemas/session-status-updated'
+        - $ref: '#/components/schemas/SessionStatusUpdatedObject'
+    SessionStatusUpdatedToSpecific:
+      allOf:
+        - type: object
+          properties:
+            type:
+              $ref: '#/components/schemas/session-status-updated-to-specific'
+        - $ref: '#/components/schemas/SessionStatusUpdatedObject'
+    SessionUpdatedObject:
+      allOf:
+        - $ref: '#/components/schemas/EventObject'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/SessionResponseBase'
+    NotaryObject:
+      type: object
+      properties:
+        notary:
+          $ref: '#/components/schemas/NotaryResponseBase'
+    NotaryChanged:
+      allOf:
+        - $ref: '#/components/schemas/SessionUpdatedObject'
+        - type: object
+          properties:
+            type:
+              $ref: '#/components/schemas/notary-changed'
+            data:
+              $ref: '#/components/schemas/NotaryObject'
+    ParticipantsObject:
+      type: object
+      properties:
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParticipantResponseBase'
+    SignerLockedUnlocked:
+      allOf:
+        - $ref: '#/components/schemas/SessionUpdatedObject'
+        - type: object
+          properties:
+            type:
+              $ref: '#/components/schemas/signer-lock'
+            data:
+              $ref: '#/components/schemas/ParticipantsObject'
+    DetailsAVIssueObject:
+      type: object
+      properties:
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParticipantResponseBase'
+    SessionPauseAVIssueObject:
+      type: object
+      properties:
+        notary:
+          $ref: '#/components/schemas/NotaryResponseBase'
+        pause_details:
+          $ref: '#/components/schemas/DetailsAVIssueObject'
+    SessionPauseAVIssue:
+      allOf:
+        - $ref: '#/components/schemas/SessionUpdatedObject'
+        - type: object
+          properties:
+            type:
+              $ref: '#/components/schemas/session-pause-av-issue'
+            data:
+              $ref: '#/components/schemas/SessionPauseAVIssueObject'
+    DetailsNotaryChangeObject:
+      type: object
+      properties:
+        states:
+          type: array
+          items:
+            type: string
+            enum:
+              - TX
+        languages:
+          type: array
+          items:
+            type: string
+            enum:
+              - ES
+    SessionPauseNotaryChangeObject:
+      type: object
+      properties:
+        notary:
+          $ref: '#/components/schemas/NotaryResponseBase'
+        pause_details:
+          $ref: '#/components/schemas/DetailsNotaryChangeObject'
+    SessionPauseNotaryChange:
+      allOf:
+        - $ref: '#/components/schemas/SessionUpdatedObject'
+        - type: object
+          properties:
+            type:
+              $ref: '#/components/schemas/session-pause-notary-change'
+            data:
+              $ref: '#/components/schemas/SessionPauseNotaryChangeObject'
+    DetailsDocumentIssueObject:
+      type: object
+      properties:
+        reason:
+          type: string
+          maxLength: 255
+    SessionPauseDocumentIssueObject:
+      type: object
+      properties:
+        notary:
+          $ref: '#/components/schemas/NotaryResponseBase'
+        pause_details:
+          $ref: '#/components/schemas/DetailsDocumentIssueObject'
+    SessionPauseDocumentIssue:
+      allOf:
+        - $ref: '#/components/schemas/SessionUpdatedObject'
+        - type: object
+          properties:
+            type:
+              $ref: '#/components/schemas/session-pause-document-issue'
+            data:
+              $ref: '#/components/schemas/SessionPauseDocumentIssueObject'
+    SessionPauseNotaryNotOnSessionObject:
+      type: object
+      properties:
+        notary:
+          $ref: '#/components/schemas/NotaryResponseBase'
+    SessionPauseNotaryNotOnSession:
+      allOf:
+        - $ref: '#/components/schemas/SessionUpdatedObject'
+        - type: object
+          properties:
+            type:
+              $ref: '#/components/schemas/session-pause-notary-not-on-session'
+            data:
+              $ref: '#/components/schemas/SessionPauseNotaryNotOnSessionObject'
+    SignerExitOtherReasonDetailsObject:
+      type: object
+      properties:
+        reason:
+          type: string
+          maxLength: 255
+    SignerExitOtherReasonObject:
+      type: object
+      properties:
+        pause_details:
+          $ref: '#/components/schemas/SignerExitOtherReasonDetailsObject'
+    SignerExitOtherReason:
+      allOf:
+        - $ref: '#/components/schemas/SessionUpdatedObject'
+        - type: object
+          properties:
+            type:
+              $ref: '#/components/schemas/session-pause-signer-exit-other-reason'
+            data:
+              $ref: '#/components/schemas/SignerExitOtherReasonObject'
+    DetailsInactiveParticipantsObject:
+      type: object
+      properties:
+        reason:
+          type: string
+          maxLength: 255
+    SessionPauseParticipantsInactivityObject:
+      type: object
+      properties:
+        notary:
+          $ref: '#/components/schemas/NotaryResponseBase'
+        pause_details:
+          $ref: '#/components/schemas/DetailsInactiveParticipantsObject'
+    SessionPauseParticipantsInactivity:
+      allOf:
+        - $ref: '#/components/schemas/SessionUpdatedObject'
+        - type: object
+          properties:
+            type:
+              $ref: '#/components/schemas/session-pause-participants-inactivity'
+            data:
+              $ref: '#/components/schemas/SessionPauseParticipantsInactivityObject'
+    DetailsOtherReasonObject:
+      type: object
+      properties:
+        reason:
+          type: string
+          maxLength: 255
+    SessionPauseOtherReasonObject:
+      type: object
+      properties:
+        notary:
+          $ref: '#/components/schemas/NotaryResponseBase'
+        pause_details:
+          $ref: '#/components/schemas/DetailsOtherReasonObject'
+    SessionPauseOtherReason:
+      allOf:
+        - $ref: '#/components/schemas/SessionUpdatedObject'
+        - type: object
+          properties:
+            type:
+              $ref: '#/components/schemas/session-pause-other-reason'
+            data:
+              $ref: '#/components/schemas/SessionPauseOtherReasonObject'
+    TerminationDetailsObject:
+      type: object
+      properties:
+        reason:
+          type: string
+          maxLength: 255
+        terminated_by:
+          type: string
+          description: <b>Optional</b> Role can be "notary" or "primary_signer"
+    SessionTerminatedWithReasonObject:
+      type: object
+      properties:
+        termination_details:
+          $ref: '#/components/schemas/TerminationDetailsObject'
+    SessionTerminatedWithReason:
+      allOf:
+        - $ref: '#/components/schemas/SessionUpdatedObject'
+        - type: object
+          properties:
+            type:
+              $ref: '#/components/schemas/session-terminate-with-reason'
+            data:
+              $ref: '#/components/schemas/SessionTerminatedWithReasonObject'
+    WebhookResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: integer
+        callback_url:
+          type: string
+          format: uri
+        event:
+          oneOf:
+            - $ref: '#/components/schemas/session-status-updated'
+            - $ref: '#/components/schemas/session-status-updated-to-specific'
+            - $ref: '#/components/schemas/notary-changed'
+            - $ref: '#/components/schemas/signer-lock'
+            - $ref: '#/components/schemas/session-pause-av-issue'
+            - $ref: '#/components/schemas/session-pause-document-issue'
+            - $ref: '#/components/schemas/session-pause-notary-change'
+            - $ref: '#/components/schemas/session-pause-notary-not-on-session'
+            - $ref: '#/components/schemas/session-pause-participants-inactivity'
+            - $ref: '#/components/schemas/session-pause-signer-exit-other-reason'
+            - $ref: '#/components/schemas/session-pause-other-reason'
+            - $ref: '#/components/schemas/session-terminate-with-reason'
+    AllInOneRequest:
+      allOf:
+        - $ref: '#/components/schemas/SessionRequest'
+        - type: object
+          properties:
+            participants:
+              type: array
+              items:
+                $ref: '#/components/schemas/Participant'
+    implicit_role:
+      type: string
+      enum:
+        - primary_signer
+        - signer
+        - witness
+      title: role
+      description: |
+        <b>Optional</b> Session status:
+         * `primary_signer`
+         * `signer`
+         * `witness`
+
+        Note: role must be explicitly defined or undefined for all participants
+    ParticipantExtended:
+      allOf:
+        - $ref: '#/components/schemas/Participant'
+        - type: object
+          properties:
+            role:
+              $ref: '#/components/schemas/implicit_role'
+        - $ref: '#/components/schemas/Extended'
+    DocumentNameRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: form-ds3053.pdf
+    client:
+      type: object
+      description: <b>Optional</b> Data for the sub-account associated with the notarization session. Used for integration.
+      properties:
+        external_id:
+          type: string
+          description: Client External Id
+        name:
+          type: string
+          description: Client Name
+    AllInOneRequestExtended:
+      type: object
+      properties:
+        external_id:
+          $ref: '#/components/schemas/external_id'
+        business_scenario:
+          $ref: '#/components/schemas/business_scenario'
+        language:
+          $ref: '#/components/schemas/language'
+        us_state:
+          $ref: '#/components/schemas/us_state'
+        custom:
+          $ref: '#/components/schemas/Custom'
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParticipantExtended'
+        documents:
+          description: <b>Optional</b> The document name is used in integration.
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentNameRequest'
+        client:
+          $ref: '#/components/schemas/client'
+    AllInOneResponse:
+      allOf:
+        - $ref: '#/components/schemas/SessionResponse'
+        - type: object
+          properties:
+            participants:
+              type: array
+              items:
+                $ref: '#/components/schemas/ParticipantResponse'
+    DocumentNameResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: form-ds3053.pdf
+        created_at:
+          type: string
+          format: date-time
+          description: The UTC datetime (ISO 8601) for when current document was uploaded
+          example: '2020-07-13T16:30:00+00:00'
+    AllInOneResponseExtended:
+      type: object
+      description: Session
+      properties:
+        id:
+          $ref: '#/components/schemas/id'
+        external_id:
+          $ref: '#/components/schemas/external_id'
+        status:
+          $ref: '#/components/schemas/status'
+        created_at:
+          $ref: '#/components/schemas/created_at'
+        price:
+          $ref: '#/components/schemas/price'
+        schedule_at:
+          $ref: '#/components/schemas/schedule_at'
+        business_scenario:
+          $ref: '#/components/schemas/business_scenario'
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParticipantResponseExtended'
+        documents:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentNameResponse'
+  responses:
+    '400':
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+    '401':
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+    '403':
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+    '405':
+      description: Method is not allowed
+  parameters:
+    session_id:
+      name: session_id
+      in: path
+      description: Session ID
+      required: true
+      schema:
+        type: string
+        format: uuid
+    participant_id:
+      name: participant_id
+      in: path
+      description: Participant ID
+      required: true
+      schema:
+        type: string
+        format: integer
+    document_id:
+      name: document_id
+      in: path
+      description: Document ID
+      required: true
+      schema:
+        type: string
+        format: uuid
+    webhook_id:
+      name: webhook_id
+      in: path
+      description: Webhook ID
+      required: true
+      schema:
+        type: integer
